@@ -782,7 +782,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                           destinationTarget.phase === phase && 
                           destinationTarget.week === week ? 
                             draggedItem && draggedItem.task.id === task.id ? 'bg-gray-200' : 'border-l-4 border-blue-500' : ''
-                        } cursor-move`}
+                        } cursor-grab`}
                         draggable="true"
                         onDragStart={() => handleDragStart(sectionData.id, phase, week, task)}
                         onDragEnd={handleDragEnd}
@@ -790,8 +790,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                         title="Glisser pour déplacer cette tâche entre les semaines"
                       >
                         <div className="flex items-center w-full p-3">
-                          {/* Indicateur de déplacement */}
-                          <div className="flex-shrink-0 mr-2 text-gray-400 cursor-move">&#8942;&#8942;</div>
+                          {/* L'indicateur de déplacement a été supprimé, conservant uniquement le curseur grab */}
                           <input 
                             type="checkbox" 
                             checked={task.completed} 
