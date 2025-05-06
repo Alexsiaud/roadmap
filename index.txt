@@ -1,0 +1,1150 @@
+import React, { useState } from 'react';
+import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, Edit, Trash2, Plus, Save, X, ChevronUp, ChevronDown } from 'lucide-react';
+
+const EditableRoadmap = () => {
+  // Structure initiale des données
+  const initialRoadmapData = {
+    sections: [
+      {
+        id: 'ecritures-comptables',
+        title: 'Module Écritures Comptables',
+        active: true,
+        color: 'blue',
+        phases: {
+          mai: {
+            title: 'MAI - Phase de Développement des Écritures Comptables',
+            order: 1,
+            semaine1: {
+              title: 'Semaine 1',
+              order: 1,
+              badge: 'Complétée',
+              tasks: [
+                { id: 'ec-m1t1', text: 'Établissement de l\'API et tests d\'écritures simples', icon: 'Code', completed: true },
+                { id: 'ec-m1t2', text: 'Validation des connexions et retours', icon: 'CheckCircle', completed: true },
+                { id: 'ec-m1t3', text: 'Détection des types de documents (factures achat/vente)', icon: 'FileText', completed: true },
+                { id: 'ec-m1t4', text: 'Identification des fournisseurs', icon: 'Users', completed: true },
+                { id: 'ec-m1t5', text: 'Génération d\'écritures comptables basiques', icon: 'CheckCircle', completed: true }
+              ]
+            },
+            semaine2: {
+              title: 'Semaine 2 - Approfondissement du Plan Comptable',
+              order: 2,
+              tasks: [
+                { id: 'ec-m2t1', text: 'Création automatique de fournisseurs/clients', icon: 'Users', completed: false },
+                { id: 'ec-m2t2', text: 'Détection intelligente des codes TVA applicables', icon: 'Settings', completed: false },
+                { id: 'ec-m2t3', text: 'Traitement des avoirs', icon: 'FileText', completed: false },
+                { id: 'ec-m2t4', text: 'Reconnaissance des modes de règlement', icon: 'Settings', completed: false },
+                { id: 'ec-m2t5', text: 'Détection de la périodicité', icon: 'Calendar', completed: false }
+              ]
+            },
+            semaine3: {
+              title: 'Semaine 3 - Saisies Complexes',
+              order: 3,
+              tasks: [
+                { id: 'ec-m3t1', text: 'Gestion multi-articles avec ventilation automatique', icon: 'Settings', completed: false },
+                { id: 'ec-m3t2', text: 'Traitement des documents à multiples taux de TVA', icon: 'Settings', completed: false },
+                { id: 'ec-m3t3', text: 'Point technique avec BRAIN pour validation d\'échelle', icon: 'Users', completed: false },
+                { id: 'ec-m3t4', text: 'Mise en place de métriques d\'évaluation', icon: 'BarChart', completed: false }
+              ]
+            },
+            semaine4: {
+              title: 'Semaine 4 - Préparation Passage au R&D',
+              order: 4,
+              tasks: [
+                { id: 'ec-m4t1', text: 'Compilation des données à transmettre', icon: 'Database', completed: false },
+                { id: 'ec-m4t2', text: 'Finalisation du prompt principal et des instructions', icon: 'FileText', completed: false },
+                { id: 'ec-m4t3', text: 'Documentation technique pour la réécriture', icon: 'FileText', completed: false },
+                { id: 'ec-m4t4', text: 'Définition du format JSON de réponse standardisé', icon: 'Code', completed: false },
+                { id: 'ec-m4t5', text: 'Stratégie d\'intégration dans le flux utilisateur', icon: 'Settings', completed: false },
+                { id: 'ec-m4t6', text: 'Définition des limitations et garde-fous', icon: 'Settings', completed: false },
+                { id: 'ec-m4t7', text: 'Structure de tarification adaptée à l\'usage', icon: 'BarChart', completed: false },
+                { id: 'ec-m4t8', text: 'Réunion de préparation avec l\'équipe DEV', icon: 'Users', completed: false }
+              ]
+            }
+          },
+          juin: {
+            title: 'JUIN - Phase d\'Implémentation Technique',
+            order: 2,
+            semaine1: {
+              title: 'Semaine 1 - Refactorisation et Validation Technique',
+              order: 1,
+              tasks: [
+                { id: 'ec-j1t1', text: 'Réécriture optimisée des appels API', icon: 'Code', completed: false },
+                { id: 'ec-j1t2', text: 'Validation architecture avec CPTO et DevOps', icon: 'Settings', completed: false },
+                { id: 'ec-j1t3', text: 'Étude d\'impact sur l\'infrastructure existante', icon: 'BarChart', completed: false }
+              ]
+            },
+            semaine2: {
+              title: 'Semaine 2 - Préparation des Données',
+              order: 2,
+              tasks: [
+                { id: 'ec-j2t1', text: 'Système de compilation des données contextuelles', icon: 'Database', completed: false },
+                { id: 'ec-j2t2', text: 'Structuration des inputs', icon: 'FileText', completed: false }
+              ]
+            },
+            semaine3: {
+              title: 'Semaine 3 - Intégration dans l\'Application',
+              order: 3,
+              tasks: [
+                { id: 'ec-j3t1', text: 'Développement du module dédié dans l\'application', icon: 'Code', completed: false },
+                { id: 'ec-j3t2', text: 'Interface utilisateur pour le contrôle de l\'IA', icon: 'Settings', completed: false },
+                { id: 'ec-j3t3', text: 'Fonctionnalité de création rapide de fournisseurs', icon: 'Settings', completed: false },
+                { id: 'ec-j3t4', text: 'Tableau de bord de suivi des performances de l\'IA', icon: 'BarChart', completed: false },
+                { id: 'ec-j3t5', text: 'Documentation utilisateur et guides d\'utilisation', icon: 'FileText', completed: false }
+              ]
+            },
+            semaine4: {
+              title: 'Semaine 4 - Tests et Validation',
+              order: 4,
+              tasks: [
+                { id: 'ec-j4t1', text: 'Début des tests en environnement de recette', icon: 'CheckCircle', completed: false },
+                { id: 'ec-j4t2', text: 'Plan de déploiement progressif', icon: 'Settings', completed: false }
+              ]
+            }
+          },
+          juillet: {
+            title: 'JUILLET - Déploiement et Optimisation',
+            order: 3,
+            semaine12: {
+              title: 'Semaines 1-2 - Déploiement Progressif',
+              order: 1,
+              tasks: [
+                { id: 'ec-ju12t1', text: 'Lancement en beta avec utilisateurs sélectionnés', icon: 'Settings', completed: false },
+                { id: 'ec-ju12t2', text: 'Collecte de retours et ajustements rapides', icon: 'CheckCircle', completed: false },
+                { id: 'ec-ju12t3', text: 'Formation des équipes de support', icon: 'Users', completed: false }
+              ]
+            },
+            semaine34: {
+              title: 'Semaines 3-4 - Optimisation et Évolution',
+              order: 2,
+              tasks: [
+                { id: 'ec-ju34t1', text: 'Analyse des performances réelles', icon: 'BarChart', completed: false },
+                { id: 'ec-ju34t2', text: 'Optimisation des coûts d\'API', icon: 'Settings', completed: false },
+                { id: 'ec-ju34t3', text: 'Planification des fonctionnalités d\'une V2', icon: 'Code', completed: false }
+              ]
+            }
+          }
+        }
+      },
+      {
+        id: 'module-ocr',
+        title: 'Module OCR Amélioré',
+        active: false,
+        color: 'green',
+        phases: {
+          mai: {
+            title: 'MAI - Analyse et Préparation',
+            order: 1,
+            semaine3: {
+              title: 'Semaine 3 - Analyse des Besoins',
+              order: 3,
+              tasks: [
+                { id: 'ocr-m3t1', text: 'Audit des performances OCR actuelles', icon: 'BarChart', completed: false },
+                { id: 'ocr-m3t2', text: 'Identification des points d\'amélioration critiques', icon: 'Settings', completed: false },
+                { id: 'ocr-m3t3', text: 'Benchmark des solutions d\'IA pour l\'OCR', icon: 'BarChart', completed: false }
+              ]
+            },
+            semaine4: {
+              title: 'Semaine 4 - Définition du Projet',
+              order: 4,
+              tasks: [
+                { id: 'ocr-m4t1', text: 'Rédaction des spécifications techniques', icon: 'FileText', completed: false },
+                { id: 'ocr-m4t2', text: 'Sélection des modèles d\'IA adaptés', icon: 'Settings', completed: false },
+                { id: 'ocr-m4t3', text: 'Définition des critères de performance', icon: 'BarChart', completed: false },
+                { id: 'ocr-m4t4', text: 'Planification des ressources nécessaires', icon: 'Database', completed: false }
+              ]
+            }
+          },
+          juin: {
+            title: 'JUIN - Développement et Tests',
+            order: 2,
+            semaine1: {
+              title: 'Semaine 1 - Prototypage',
+              order: 1,
+              tasks: [
+                { id: 'ocr-j1t1', text: 'Création d\'un environnement de test', icon: 'Code', completed: false },
+                { id: 'ocr-j1t2', text: 'Intégration des modèles d\'IA sélectionnés', icon: 'Settings', completed: false },
+                { id: 'ocr-j1t3', text: 'Tests préliminaires sur documents types', icon: 'CheckCircle', completed: false }
+              ]
+            },
+            semaine2: {
+              title: 'Semaine 2 - Optimisation du Modèle',
+              order: 2,
+              tasks: [
+                { id: 'ocr-j2t1', text: 'Entraînement sur documents spécifiques', icon: 'Settings', completed: false },
+                { id: 'ocr-j2t2', text: 'Optimisation des paramètres de reconnaissance', icon: 'Settings', completed: false },
+                { id: 'ocr-j2t3', text: 'Validation des performances sur jeu de test', icon: 'CheckCircle', completed: false }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  };
+
+  // État pour suivre les données et l'édition
+  const [roadmapData, setRoadmapData] = useState(initialRoadmapData);
+  const [activeSection, setActiveSection] = useState(roadmapData.sections.find(s => s.active).id);
+  const [editMode, setEditMode] = useState({
+    type: null, // 'section', 'phase', 'week', 'task'
+    sectionId: null,
+    phase: null,
+    week: null,
+    taskId: null,
+    data: null
+  });
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [destinationTarget, setDestinationTarget] = useState(null);
+  
+  const icons = {
+    'Code': Code,
+    'CheckCircle': CheckCircle,
+    'FileText': FileText,
+    'Users': Users,
+    'Settings': Settings,
+    'Calendar': Calendar,
+    'Database': Database,
+    'BarChart': BarChart
+  };
+  
+  // Calculer les progrès par phase pour une section donnée
+  const calculateProgress = (sectionId, phase) => {
+    const section = roadmapData.sections.find(s => s.id === sectionId);
+    if (!section || !section.phases[phase]) return { percentage: 0, completed: 0, total: 0 };
+    
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    Object.keys(section.phases[phase]).forEach(weekKey => {
+      if (weekKey !== 'title' && weekKey !== 'order') {
+        const week = section.phases[phase][weekKey];
+        if (week.tasks) {
+          totalTasks += week.tasks.length;
+          completedTasks += week.tasks.filter(task => task.completed).length;
+        }
+      }
+    });
+    
+    return { 
+      percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      completed: completedTasks,
+      total: totalTasks
+    };
+  };
+
+  // Calculer les progrès globaux pour une section
+  const calculateSectionProgress = (sectionId) => {
+    const section = roadmapData.sections.find(s => s.id === sectionId);
+    if (!section) return { percentage: 0, completed: 0, total: 0 };
+    
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    Object.keys(section.phases).forEach(phase => {
+      Object.keys(section.phases[phase]).forEach(weekKey => {
+        if (weekKey !== 'title' && weekKey !== 'order') {
+          const week = section.phases[phase][weekKey];
+          if (week && week.tasks) {
+            totalTasks += week.tasks.length;
+            completedTasks += week.tasks.filter(task => task.completed).length;
+          }
+        }
+      });
+    });
+    
+    return { 
+      percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      completed: completedTasks,
+      total: totalTasks
+    };
+  };
+
+  // Gérer le changement d'état d'une tâche
+  const handleTaskToggle = (sectionId, phase, week, taskId) => {
+    const updatedRoadmapData = {...roadmapData};
+    const sectionIndex = updatedRoadmapData.sections.findIndex(s => s.id === sectionId);
+    
+    if (sectionIndex !== -1) {
+      const taskIndex = updatedRoadmapData.sections[sectionIndex].phases[phase][week].tasks.findIndex(task => task.id === taskId);
+      
+      if (taskIndex !== -1) {
+        updatedRoadmapData.sections[sectionIndex].phases[phase][week].tasks[taskIndex].completed = 
+          !updatedRoadmapData.sections[sectionIndex].phases[phase][week].tasks[taskIndex].completed;
+        setRoadmapData(updatedRoadmapData);
+      }
+    }
+  };
+
+  // Entrer en mode édition
+  const startEdit = (type, sectionId, phase, week, taskId) => {
+    let data = null;
+    
+    if (type === 'section') {
+      data = roadmapData.sections.find(s => s.id === sectionId);
+    } else if (type === 'phase') {
+      data = roadmapData.sections.find(s => s.id === sectionId).phases[phase];
+    } else if (type === 'week') {
+      data = roadmapData.sections.find(s => s.id === sectionId).phases[phase][week];
+    } else if (type === 'task') {
+      data = roadmapData.sections.find(s => s.id === sectionId).phases[phase][week].tasks.find(t => t.id === taskId);
+    }
+    
+    setEditMode({
+      type,
+      sectionId,
+      phase,
+      week, 
+      taskId,
+      data: {...data}
+    });
+  };
+
+  // Annuler l'édition
+  const cancelEdit = () => {
+    setEditMode({
+      type: null,
+      sectionId: null,
+      phase: null,
+      week: null,
+      taskId: null,
+      data: null
+    });
+  };
+
+  // Sauvegarder les modifications
+  const saveEdit = () => {
+    const updatedRoadmapData = {...roadmapData};
+    const { type, sectionId, phase, week, taskId, data } = editMode;
+    
+    if (type === 'section') {
+      const sectionIndex = updatedRoadmapData.sections.findIndex(s => s.id === sectionId);
+      if (sectionIndex !== -1) {
+        updatedRoadmapData.sections[sectionIndex] = {
+          ...updatedRoadmapData.sections[sectionIndex],
+          title: data.title,
+          color: data.color
+        };
+      }
+    } else if (type === 'phase') {
+      updatedRoadmapData.sections.find(s => s.id === sectionId).phases[phase].title = data.title;
+    } else if (type === 'week') {
+      updatedRoadmapData.sections.find(s => s.id === sectionId).phases[phase][week].title = data.title;
+      if (data.badge !== undefined) {
+        updatedRoadmapData.sections.find(s => s.id === sectionId).phases[phase][week].badge = data.badge;
+      }
+    } else if (type === 'task') {
+      const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+      const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
+      
+      if (taskIndex !== -1) {
+        section.phases[phase][week].tasks[taskIndex] = {
+          ...section.phases[phase][week].tasks[taskIndex],
+          text: data.text,
+          icon: data.icon
+        };
+      }
+    }
+    
+    setRoadmapData(updatedRoadmapData);
+    cancelEdit();
+  };
+
+  // Ajouter une nouvelle tâche
+  const addTask = (sectionId, phase, week) => {
+    const updatedRoadmapData = {...roadmapData};
+    const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+    
+    if (section) {
+      const newTaskId = `${sectionId}-${phase}-${week}-task-${Date.now()}`;
+      const newTask = {
+        id: newTaskId,
+        text: 'Nouvelle tâche',
+        icon: 'Settings',
+        completed: false
+      };
+      
+      section.phases[phase][week].tasks.push(newTask);
+      setRoadmapData(updatedRoadmapData);
+      
+      // Entrer immédiatement en mode d'édition pour la nouvelle tâche
+      startEdit('task', sectionId, phase, week, newTaskId);
+    }
+  };
+  
+  // Supprimer une tâche
+  const deleteTask = (sectionId, phase, week, taskId) => {
+    const updatedRoadmapData = {...roadmapData};
+    const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+    
+    if (section) {
+      section.phases[phase][week].tasks = section.phases[phase][week].tasks.filter(t => t.id !== taskId);
+      setRoadmapData(updatedRoadmapData);
+    }
+  };
+  
+  // Ajouter une nouvelle semaine
+  const addWeek = (sectionId, phase) => {
+    const updatedRoadmapData = {...roadmapData};
+    const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+    
+    if (section) {
+      // Déterminer l'ordre de la nouvelle semaine
+      const existingWeeks = Object.keys(section.phases[phase]).filter(key => 
+        key !== 'title' && key !== 'order'
+      );
+      const maxOrder = Math.max(...existingWeeks.map(w => section.phases[phase][w].order || 0), 0);
+      
+      // Générer un ID unique pour la nouvelle semaine
+      const weekId = `semaine-${Date.now()}`;
+      
+      // Créer la nouvelle semaine
+      section.phases[phase][weekId] = {
+        title: 'Nouvelle Semaine',
+        order: maxOrder + 1,
+        tasks: []
+      };
+      
+      setRoadmapData(updatedRoadmapData);
+      
+      // Entrer en mode d'édition pour la nouvelle semaine
+      startEdit('week', sectionId, phase, weekId, null);
+    }
+  };
+  
+  // Supprimer une semaine
+  const deleteWeek = (sectionId, phase, week) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette semaine et toutes ses tâches ?')) {
+      const updatedRoadmapData = {...roadmapData};
+      const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+      
+      if (section && section.phases[phase]) {
+        // Supprimer la semaine
+        delete section.phases[phase][week];
+        setRoadmapData(updatedRoadmapData);
+      }
+    }
+  };
+  
+  // Ajouter une nouvelle phase (mois)
+  const addPhase = (sectionId) => {
+    const updatedRoadmapData = {...roadmapData};
+    const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+    
+    if (section) {
+      // Déterminer l'ordre de la nouvelle phase
+      const existingPhases = Object.keys(section.phases);
+      const maxOrder = Math.max(...existingPhases.map(p => section.phases[p].order || 0), 0);
+      
+      // Générer un ID unique pour la nouvelle phase
+      const phaseId = `phase-${Date.now()}`;
+      
+      // Créer la nouvelle phase
+      section.phases[phaseId] = {
+        title: 'Nouveau Mois',
+        order: maxOrder + 1,
+        semaine1: {
+          title: 'Semaine 1',
+          order: 1,
+          tasks: []
+        }
+      };
+      
+      setRoadmapData(updatedRoadmapData);
+      
+      // Entrer en mode d'édition pour la nouvelle phase
+      startEdit('phase', sectionId, phaseId, null, null);
+    }
+  };
+  
+  // Supprimer une phase
+  const deletePhase = (sectionId, phase) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette phase et toutes ses semaines et tâches ?')) {
+      const updatedRoadmapData = {...roadmapData};
+      const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+      
+      if (section) {
+        // Supprimer la phase
+        delete section.phases[phase];
+        setRoadmapData(updatedRoadmapData);
+      }
+    }
+  };
+  
+  // Ajouter une nouvelle section
+  const addSection = () => {
+    const updatedRoadmapData = {...roadmapData};
+    
+    // Générer un ID unique pour la nouvelle section
+    const sectionId = `section-${Date.now()}`;
+    
+    // Créer la nouvelle section
+    const newSection = {
+      id: sectionId,
+      title: 'Nouveau Module',
+      active: false,
+      color: 'purple',
+      phases: {
+        phase1: {
+          title: 'Phase Initiale',
+          order: 1,
+          semaine1: {
+            title: 'Semaine 1',
+            order: 1,
+            tasks: []
+          }
+        }
+      }
+    };
+    
+    updatedRoadmapData.sections.push(newSection);
+    setRoadmapData(updatedRoadmapData);
+    
+    // Entrer en mode d'édition pour la nouvelle section
+    startEdit('section', sectionId, null, null, null);
+  };
+  
+  // Supprimer une section
+  const deleteSection = (sectionId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette section et toutes ses phases, semaines et tâches ?')) {
+      const updatedRoadmapData = {...roadmapData};
+      
+      // Supprimer la section
+      updatedRoadmapData.sections = updatedRoadmapData.sections.filter(s => s.id !== sectionId);
+      
+      // Si la section active a été supprimée, activer la première section restante
+      if (sectionId === activeSection && updatedRoadmapData.sections.length > 0) {
+        setActiveSection(updatedRoadmapData.sections[0].id);
+      }
+      
+      setRoadmapData(updatedRoadmapData);
+    }
+  };
+  
+  // Fonctions pour déplacer les tâches
+  const handleDragStart = (sectionId, phase, week, task) => {
+    setDraggedItem({
+      sectionId,
+      phase,
+      week,
+      task
+    });
+  };
+  
+  const handleDragEnter = (sectionId, phase, week) => {
+    if (draggedItem && (draggedItem.phase !== phase || draggedItem.week !== week)) {
+      setDestinationTarget({
+        sectionId,
+        phase,
+        week
+      });
+    }
+  };
+  
+  const handleDragEnd = () => {
+    if (draggedItem && destinationTarget) {
+      const { sectionId: fromSectionId, phase: fromPhase, week: fromWeek, task } = draggedItem;
+      const { sectionId: toSectionId, phase: toPhase, week: toWeek } = destinationTarget;
+      
+      // Déplacer la tâche
+      const updatedRoadmapData = {...roadmapData};
+      
+      // Trouver la tâche dans la source
+      const fromSection = updatedRoadmapData.sections.find(s => s.id === fromSectionId);
+      const taskIndex = fromSection.phases[fromPhase][fromWeek].tasks.findIndex(t => t.id === task.id);
+      
+      if (taskIndex !== -1) {
+        // Retirer la tâche de son emplacement d'origine
+        const [removedTask] = fromSection.phases[fromPhase][fromWeek].tasks.splice(taskIndex, 1);
+        
+        // Ajouter la tâche à sa nouvelle destination
+        const toSection = updatedRoadmapData.sections.find(s => s.id === toSectionId);
+        toSection.phases[toPhase][toWeek].tasks.push(removedTask);
+        
+        setRoadmapData(updatedRoadmapData);
+      }
+    }
+    
+    // Réinitialiser l'état de glisser-déposer
+    setDraggedItem(null);
+    setDestinationTarget(null);
+  };
+  
+  // Déplacer une tâche vers le haut ou vers le bas dans sa liste
+  const moveTask = (sectionId, phase, week, taskId, direction) => {
+    const updatedRoadmapData = {...roadmapData};
+    const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+    const tasks = section.phases[phase][week].tasks;
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    
+    if (taskIndex !== -1) {
+      if (direction === "up" && taskIndex > 0) {
+        // Déplacer vers le haut
+        [tasks[taskIndex], tasks[taskIndex - 1]] = [tasks[taskIndex - 1], tasks[taskIndex]];
+      } else if (direction === "down" && taskIndex < tasks.length - 1) {
+        // Déplacer vers le bas
+        [tasks[taskIndex], tasks[taskIndex + 1]] = [tasks[taskIndex + 1], tasks[taskIndex]];
+      }
+      
+      setRoadmapData(updatedRoadmapData);
+    }
+  };
+
+  // Basculer entre les sections
+  const switchSection = (sectionId) => {
+    setActiveSection(sectionId);
+  };
+
+  // Rendu de l'icône en fonction du type
+  const renderIcon = (iconType, isCompleted) => {
+    const className = isCompleted ? "text-green-600" : "text-blue-600";
+    const IconComponent = icons[iconType] || icons['Settings'];
+    return <IconComponent className={className} size={18} />;
+  };
+  
+  // Formulaire d'édition d'une tâche
+  const renderTaskEditForm = () => {
+    if (editMode.type !== 'task' || !editMode.data) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 className="text-lg font-bold mb-4">Modifier la tâche</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              value={editMode.data.text}
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, text: e.target.value}})}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Icône</label>
+            <select
+              className="w-full p-2 border rounded"
+              value={editMode.data.icon}
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, icon: e.target.value}})}
+            >
+              {Object.keys(icons).map(icon => (
+                <option key={icon} value={icon}>{icon}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button 
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={cancelEdit}
+            >
+              Annuler
+            </button>
+            <button 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={saveEdit}
+            >
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Formulaire d'édition d'une semaine
+  const renderWeekEditForm = () => {
+    if (editMode.type !== 'week' || !editMode.data) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 className="text-lg font-bold mb-4">Modifier la semaine</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Titre</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              value={editMode.data.title}
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, title: e.target.value}})}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Badge (optionnel)</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              value={editMode.data.badge || ''}
+              placeholder="Ex: Complétée (laisser vide pour aucun badge)"
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, badge: e.target.value}})}
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button 
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={cancelEdit}
+            >
+              Annuler
+            </button>
+            <button 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={saveEdit}
+            >
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Formulaire d'édition d'une phase
+  const renderPhaseEditForm = () => {
+    if (editMode.type !== 'phase' || !editMode.data) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 className="text-lg font-bold mb-4">Modifier la phase</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Titre</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              value={editMode.data.title}
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, title: e.target.value}})}
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button 
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={cancelEdit}
+            >
+              Annuler
+            </button>
+            <button 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={saveEdit}
+            >
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Formulaire d'édition d'une section
+  const renderSectionEditForm = () => {
+    if (editMode.type !== 'section' || !editMode.data) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 className="text-lg font-bold mb-4">Modifier le module</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Titre</label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              value={editMode.data.title}
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, title: e.target.value}})}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Couleur</label>
+            <select
+              className="w-full p-2 border rounded"
+              value={editMode.data.color}
+              onChange={(e) => setEditMode({...editMode, data: {...editMode.data, color: e.target.value}})}
+            >
+              <option value="blue">Bleu</option>
+              <option value="green">Vert</option>
+              <option value="purple">Violet</option>
+              <option value="red">Rouge</option>
+              <option value="amber">Orange</option>
+              <option value="teal">Turquoise</option>
+            </select>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button 
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={cancelEdit}
+            >
+              Annuler
+            </button>
+            <button 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={saveEdit}
+            >
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Obtenez la section active
+  const sectionData = roadmapData.sections.find(s => s.id === activeSection);
+
+  // Styles
+  const containerStyle = "max-w-5xl mx-auto p-6 bg-gray-50 rounded-lg shadow-lg";
+  const titleStyle = "text-2xl font-bold text-center mb-6 text-blue-800";
+  const tabsContainerStyle = "flex mb-6 border-b flex-wrap";
+  const tabStyle = "py-2 px-4 mr-2 font-medium rounded-t-lg text-gray-600 hover:bg-gray-100 cursor-pointer";
+  const tabActiveStyle = "py-2 px-4 mr-2 font-medium rounded-t-lg text-white cursor-pointer";
+  const monthStyle = "text-xl font-bold mb-4 py-2 px-4 rounded-lg text-white flex justify-between items-center";
+  const weekStyle = "font-semibold text-lg mb-2 border-l-4 pl-4 py-1 flex justify-between items-center";
+  const taskListStyle = "ml-8 mb-6";
+  const taskStyle = "flex items-start mb-3";
+  const taskIconStyle = "mt-1 mr-3 flex-shrink-0";
+  const taskTextStyle = "text-gray-800 flex-grow";
+  const taskCompletedStyle = "line-through text-gray-500 flex-grow";
+  const checkboxStyle = "w-5 h-5 mr-3 cursor-pointer";
+  const progressBarContainerStyle = "w-32 h-4 bg-gray-200 rounded-full overflow-hidden";
+  const completedBadge = "inline-flex items-center bg-green-100 text-green-800 text-xs font-medium ml-2 px-2 py-0.5 rounded-full";
+  const actionButtonStyle = "p-1 text-gray-500 hover:text-gray-700 transition-colors";
+  const dropTargetStyle = "bg-blue-100 border-2 border-dashed border-blue-400 rounded p-2 my-2";
+  
+  // Couleurs pour les différentes sections
+  const sectionColors = {
+    'blue': {
+      tab: 'bg-blue-600',
+      progress: 'bg-blue-500',
+      week: 'border-blue-500',
+      summary: 'bg-blue-100'
+    },
+    'green': {
+      tab: 'bg-green-600',
+      progress: 'bg-green-500',
+      week: 'border-green-500',
+      summary: 'bg-green-100'
+    },
+    'purple': {
+      tab: 'bg-purple-600',
+      progress: 'bg-purple-500',
+      week: 'border-purple-500',
+      summary: 'bg-purple-100'
+    },
+    'red': {
+      tab: 'bg-red-600',
+      progress: 'bg-red-500',
+      week: 'border-red-500',
+      summary: 'bg-red-100'
+    },
+    'amber': {
+      tab: 'bg-amber-600',
+      progress: 'bg-amber-500',
+      week: 'border-amber-500',
+      summary: 'bg-amber-100'
+    },
+    'teal': {
+      tab: 'bg-teal-600',
+      progress: 'bg-teal-500',
+      week: 'border-teal-500',
+      summary: 'bg-teal-100'
+    }
+  };
+  
+  return (
+    <div className={containerStyle}>
+      <h1 className={titleStyle}>Roadmap d'Implémentation IA - Application de Pré-saisie Comptable</h1>
+      
+      {/* Onglets de navigation */}
+      <div className={tabsContainerStyle}>
+        {roadmapData.sections.map(section => (
+          <div 
+            key={section.id}
+            className={section.id === activeSection ? `${tabActiveStyle} ${sectionColors[section.color].tab}` : tabStyle}
+            onClick={() => switchSection(section.id)}
+          >
+            <div className="flex items-center justify-between">
+              <span>{section.title}</span>
+              <span className="ml-2 inline-flex items-center justify-center w-6 h-6 bg-white bg-opacity-30 rounded-full text-xs">
+                {calculateSectionProgress(section.id).percentage}%
+              </span>
+            </div>
+          </div>
+        ))}
+        <button 
+          className="py-2 px-4 flex items-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+          onClick={addSection}
+        >
+          <Plus size={16} className="mr-1" /> Nouveau Module
+        </button>
+      </div>
+      
+      {/* Contenu de la section active */}
+      {sectionData && (
+        <div className="section-content">
+          {/* Contrôles de la section */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">{sectionData.title}</h2>
+            <div className="flex space-x-2">
+              <button 
+                className={`${actionButtonStyle} flex items-center`}
+                onClick={() => startEdit('section', sectionData.id, null, null, null)}
+              >
+                <Edit size={16} className="mr-1" /> Modifier
+              </button>
+              <button 
+                className={`${actionButtonStyle} flex items-center text-red-500`}
+                onClick={() => deleteSection(sectionData.id)}
+              >
+                <Trash2 size={16} className="mr-1" /> Supprimer
+              </button>
+              <button 
+                className={`${actionButtonStyle} flex items-center text-green-600`}
+                onClick={() => addPhase(sectionData.id)}
+              >
+                <Plus size={16} className="mr-1" /> Ajouter une Phase
+              </button>
+            </div>
+          </div>
+          
+          {/* Générer les phases (mois) */}
+          {Object.keys(sectionData.phases)
+            .sort((a, b) => sectionData.phases[a].order - sectionData.phases[b].order)
+            .map(phase => (
+            <div key={phase} className="mb-8">
+              <div className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between`}>
+                <span className="flex items-center">
+                  <Calendar className="mr-2" size={20} /> 
+                  {sectionData.phases[phase].title}
+                </span>
+                <div className="flex items-center">
+                  <div className={progressBarContainerStyle}>
+                    <div 
+                      className={`h-full ${sectionColors[sectionData.color].progress}`} 
+                      style={{ width: `${calculateProgress(sectionData.id, phase).percentage}%` }}
+                    ></div>
+                  </div>
+                  <span className="ml-2 text-sm text-white">
+                    {calculateProgress(sectionData.id, phase).completed}/{calculateProgress(sectionData.id, phase).total} ({calculateProgress(sectionData.id, phase).percentage}%)
+                  </span>
+                  <div className="ml-4 flex space-x-1">
+                    <button 
+                      className="p-1 text-white hover:bg-white hover:bg-opacity-20 rounded"
+                      onClick={() => startEdit('phase', sectionData.id, phase, null, null)}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button 
+                      className="p-1 text-white hover:bg-white hover:bg-opacity-20 rounded"
+                      onClick={() => deletePhase(sectionData.id, phase)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <button 
+                      className="p-1 text-white hover:bg-white hover:bg-opacity-20 rounded"
+                      onClick={() => addWeek(sectionData.id, phase)}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Générer les semaines pour cette phase */}
+              {Object.keys(sectionData.phases[phase])
+                .filter(key => key !== 'title' && key !== 'order')
+                .sort((a, b) => sectionData.phases[phase][a].order - sectionData.phases[phase][b].order)
+                .map(week => (
+                <div key={week}>
+                  <div 
+                    className={`${weekStyle} ${sectionColors[sectionData.color].week}`}
+                    onDragEnter={() => handleDragEnter(sectionData.id, phase, week)}
+                  >
+                    <div className="flex items-center">
+                      {sectionData.phases[phase][week].title}
+                      {sectionData.phases[phase][week].badge && (
+                        <span className={completedBadge}>
+                          <CheckCircle size={12} className="mr-1" /> {sectionData.phases[phase][week].badge}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex space-x-1">
+                      <button 
+                        className={actionButtonStyle}
+                        onClick={() => startEdit('week', sectionData.id, phase, week, null)}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button 
+                        className={actionButtonStyle}
+                        onClick={() => deleteWeek(sectionData.id, phase, week)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <button 
+                        className={actionButtonStyle}
+                        onClick={() => addTask(sectionData.id, phase, week)}
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <ul className={taskListStyle}>
+                    {sectionData.phases[phase][week].tasks.map((task, index) => (
+                      <li 
+                        key={task.id} 
+                        className={`${taskStyle} ${
+                          destinationTarget && 
+                          destinationTarget.sectionId === sectionData.id && 
+                          destinationTarget.phase === phase && 
+                          destinationTarget.week === week ? 
+                            draggedItem && draggedItem.task.id === task.id ? '' : 'pl-2' : ''
+                        }`}
+                        draggable="true"
+                        onDragStart={() => handleDragStart(sectionData.id, phase, week, task)}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={task.completed} 
+                          onChange={() => handleTaskToggle(sectionData.id, phase, week, task.id)} 
+                          className={checkboxStyle}
+                        />
+                        {renderIcon(task.icon, task.completed)}
+                        <span className={task.completed ? taskCompletedStyle : taskTextStyle}>
+                          {task.text}
+                        </span>
+                        <div className="flex space-x-1 ml-2">
+                          <button 
+                            className={actionButtonStyle}
+                            onClick={() => moveTask(sectionData.id, phase, week, task.id, "up")}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp size={16} className={index === 0 ? "text-gray-300" : ""} />
+                          </button>
+                          <button 
+                            className={actionButtonStyle}
+                            onClick={() => moveTask(sectionData.id, phase, week, task.id, "down")}
+                            disabled={index === sectionData.phases[phase][week].tasks.length - 1}
+                          >
+                            <ChevronDown size={16} className={index === sectionData.phases[phase][week].tasks.length - 1 ? "text-gray-300" : ""} />
+                          </button>
+                          <button 
+                            className={actionButtonStyle}
+                            onClick={() => startEdit('task', sectionData.id, phase, week, task.id)}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className={actionButtonStyle}
+                            onClick={() => deleteTask(sectionData.id, phase, week, task.id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                    
+                    {/* Zone de dépôt pour glisser-déposer */}
+                    {destinationTarget && 
+                     destinationTarget.sectionId === sectionData.id && 
+                     destinationTarget.phase === phase && 
+                     destinationTarget.week === week && (
+                      <li className={dropTargetStyle}>
+                        Déposer ici pour déplacer la tâche
+                      </li>
+                    )}
+                    
+                    {/* Bouton pour ajouter une tâche */}
+                    <li className="flex items-center mt-2">
+                      <button 
+                        className="flex items-center text-gray-600 hover:text-gray-800"
+                        onClick={() => addTask(sectionData.id, phase, week)}
+                      >
+                        <Plus size={16} className="mr-1" /> Ajouter une tâche
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              ))}
+              
+              {/* Bouton pour ajouter une semaine */}
+              <div className="ml-8 mb-4">
+                <button 
+                  className="flex items-center text-gray-600 hover:text-gray-800"
+                  onClick={() => addWeek(sectionData.id, phase)}
+                >
+                  <Plus size={16} className="mr-1" /> Ajouter une semaine
+                </button>
+              </div>
+            </div>
+          ))}
+          
+          {/* Bouton pour ajouter une phase */}
+          <div className="mb-8">
+            <button 
+              className="flex items-center px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={() => addPhase(sectionData.id)}
+            >
+              <Plus size={16} className="mr-1" /> Ajouter une phase
+            </button>
+          </div>
+          
+          {/* Résumé de progression pour la section active */}
+          <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+            <h3 className="font-bold text-lg mb-2">Résumé de progression - {sectionData.title}</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {Object.keys(sectionData.phases).map(phase => {
+                const progress = calculateProgress(sectionData.id, phase);
+                return (
+                  <div key={phase} className={`p-3 rounded-lg ${sectionColors[sectionData.color].summary}`}>
+                    <div className="font-medium">{phase.charAt(0).toUpperCase() + phase.slice(1)}</div>
+                    <div className="flex items-center mt-2">
+                      <div className="w-full h-4 bg-gray-200 rounded-full">
+                        <div 
+                          className={`h-full rounded-full ${sectionColors[sectionData.color].progress}`} 
+                          style={{ width: `${progress.percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-sm">
+                        {progress.percentage}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Vue d'ensemble */}
+      <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+        <h3 className="font-bold text-lg mb-4">Vue d'ensemble du projet</h3>
+        <div className="grid grid-cols-1 gap-4">
+          {roadmapData.sections.map(section => {
+            const progress = calculateSectionProgress(section.id);
+            return (
+              <div key={section.id} className="flex items-center p-3 rounded-lg bg-white">
+                <div className="font-medium flex-grow">{section.title}</div>
+                <div className="flex items-center w-1/2">
+                  <div className="w-full h-4 bg-gray-200 rounded-full">
+                    <div 
+                      className={`h-full rounded-full ${sectionColors[section.color].progress}`} 
+                      style={{ width: `${progress.percentage}%` }}
+                    ></div>
+                  </div>
+                  <span className="ml-2 text-sm font-medium">
+                    {progress.percentage}% ({progress.completed}/{progress.total})
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Formulaires d'édition */}
+      {renderTaskEditForm()}
+      {renderWeekEditForm()}
+      {renderPhaseEditForm()}
+      {renderSectionEditForm()}
+    </div>
+  );
+};
+
+export default EditableRoadmap;
