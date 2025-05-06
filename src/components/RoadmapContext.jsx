@@ -112,6 +112,18 @@ export const RoadmapProvider = ({ children }) => {
     const correctSecret = 'admin123';
     return adminSecret === correctSecret;
   };
+  
+  // Fonction pour réordonner les sections
+  const reorderSections = (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return; // Rien à faire si même position
+    
+    setRoadmapData(prevData => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      const [movedSection] = newData.sections.splice(fromIndex, 1);
+      newData.sections.splice(toIndex, 0, movedSection);
+      return newData;
+    });
+  };
 
   return (
     <RoadmapContext.Provider value={{
@@ -119,7 +131,8 @@ export const RoadmapProvider = ({ children }) => {
       setRoadmapData,
       voteForTask,
       checkAdminAccess,
-      userVotes
+      userVotes,
+      reorderSections
     }}>
       {children}
     </RoadmapContext.Provider>

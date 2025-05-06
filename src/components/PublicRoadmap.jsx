@@ -3,13 +3,16 @@ import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarCh
 import { useRoadmap } from './RoadmapContext';
 
 const PublicRoadmap = () => {
-  const { roadmapData, voteForTask, userVotes } = useRoadmap();
+  const { roadmapData, voteForTask, userVotes, reorderSections } = useRoadmap();
   const [activeSection, setActiveSection] = useState(
     roadmapData.sections.find(s => s.active)?.id || roadmapData.sections[0]?.id
   );
   const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
   // État pour suivre les phases réduites (collapsées)
   const [collapsedPhases, setCollapsedPhases] = useState({});
+  // États pour le drag & drop
+  const [draggedSectionIndex, setDraggedSectionIndex] = useState(null);
+  const [dragOverSectionIndex, setDragOverSectionIndex] = useState(null);
 
   // Les styles sont maintenant définis dans index.css comme classes réutilisables
   const containerStyle = "container-main";
@@ -189,15 +192,48 @@ const PublicRoadmap = () => {
         </div>
       )}
       
-      {/* Onglets de navigation */}
+      {/* Onglets de navigation avec fonctionnalité de réordonnement */}
       <div className={tabsContainerStyle}>
-        {roadmapData.sections.map(section => (
+        {roadmapData.sections.map((section, index) => (
           <div
             key={section.id}
-            className={`${tabStyle} ${section.id === activeSection ? activeTabStyle : inactiveTabStyle}`}
+            className={`${tabStyle} ${section.id === activeSection ? activeTabStyle : inactiveTabStyle} 
+              ${draggedSectionIndex === index ? 'opacity-50' : ''} 
+              ${dragOverSectionIndex === index ? 'border-2 border-dashed border-blue-400' : ''}`}
             onClick={() => setActiveSection(section.id)}
+            draggable="true"
+            onDragStart={(e) => {
+              setDraggedSectionIndex(index);
+              // Ajouter des données de transfert pour compatibilité Firefox
+              e.dataTransfer.setData('text/plain', index);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverSectionIndex(index);
+            }}
+            onDragLeave={() => {
+              if (dragOverSectionIndex === index) {
+                setDragOverSectionIndex(null);
+              }
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (draggedSectionIndex !== null) {
+                reorderSections(draggedSectionIndex, index);
+                setDraggedSectionIndex(null);
+                setDragOverSectionIndex(null);
+              }
+            }}
+            onDragEnd={() => {
+              setDraggedSectionIndex(null);
+              setDragOverSectionIndex(null);
+            }}
+            style={{ cursor: 'grab' }}
           >
-            {section.title}
+            <span className="flex items-center">
+              <span className="mr-2 text-gray-400">☰</span> {/* Indicateur visuel pour le glisser-déposer */}
+              {section.title}
+            </span>
           </div>
         ))}
       </div>
