@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, ThumbsUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, ThumbsUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
 
 const PublicRoadmap = () => {
@@ -8,6 +8,8 @@ const PublicRoadmap = () => {
     roadmapData.sections.find(s => s.active)?.id || roadmapData.sections[0]?.id
   );
   const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
+  // État pour suivre les phases réduites (collapsées)
+  const [collapsedPhases, setCollapsedPhases] = useState({});
 
   // Les styles sont maintenant définis dans index.css comme classes réutilisables
   const containerStyle = "container-main";
@@ -99,6 +101,53 @@ const PublicRoadmap = () => {
     return IconComponent ? <IconComponent size={16} className={completed ? "text-gray-400" : ""} /> : null;
   };
 
+  // Fonction pour vérifier si toutes les tâches d'une phase sont complétées
+  const areAllTasksCompleted = (section, phase) => {
+    let allCompleted = true;
+    let totalTasks = 0;
+    
+    Object.keys(section.phases[phase]).forEach(key => {
+      if (key !== 'title' && key !== 'order' && section.phases[phase][key].tasks) {
+        section.phases[phase][key].tasks.forEach(task => {
+          totalTasks++;
+          if (!task.completed) allCompleted = false;
+        });
+      }
+    });
+    
+    // Retourne false si aucune tâche dans cette phase
+    return totalTasks > 0 ? allCompleted : false;
+  };
+  
+  // Gérer le clic sur une phase pour la développer/réduire
+  const togglePhase = (sectionId, phase) => {
+    const key = `${sectionId}-${phase}`;
+    setCollapsedPhases(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+  
+  // Effet pour réduire automatiquement les phases dont toutes les tâches sont complétées
+  useEffect(() => {
+    const newCollapsedPhases = {...collapsedPhases};
+    let changes = false;
+    
+    roadmapData.sections.forEach(section => {
+      Object.keys(section.phases).forEach(phase => {
+        const key = `${section.id}-${phase}`;
+        if (areAllTasksCompleted(section, phase) && !newCollapsedPhases[key]) {
+          newCollapsedPhases[key] = true;
+          changes = true;
+        }
+      });
+    });
+    
+    if (changes) {
+      setCollapsedPhases(newCollapsedPhases);
+    }
+  }, [roadmapData, collapsedPhases]);
+  
   // Calcul des statistiques pour la vue d'ensemble
   const calculateStats = () => {
     let totalTasks = 0;
@@ -163,15 +212,27 @@ const PublicRoadmap = () => {
             .sort((a, b) => sectionData.phases[a].order - sectionData.phases[b].order)
             .map(phase => (
             <div key={phase} className="mb-8">
-              <div className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between`}>
+              <div 
+                className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between cursor-pointer`}
+                onClick={() => togglePhase(sectionData.id, phase)}
+              >
                 <span className="flex items-center">
+                  {collapsedPhases[`${sectionData.id}-${phase}`] ? 
+                    <ChevronRight className="mr-2" size={20} /> : 
+                    <ChevronDown className="mr-2" size={20} />
+                  }
                   <Calendar className="mr-2" size={20} /> 
                   {sectionData.phases[phase].title}
                 </span>
+                {areAllTasksCompleted(sectionData, phase) && (
+                  <span className="text-xs bg-green-100 text-green-800 font-medium py-1 px-2 rounded-full">
+                    Complété
+                  </span>
+                )}
               </div>
               
               {/* Affichage des semaines et tâches */}
-              {Object.keys(sectionData.phases[phase])
+              {!collapsedPhases[`${sectionData.id}-${phase}`] && Object.keys(sectionData.phases[phase])
                 .filter(key => key !== 'title' && key !== 'order')
                 .sort((a, b) => sectionData.phases[phase][a].order - sectionData.phases[phase][b].order)
                 .map(week => (
