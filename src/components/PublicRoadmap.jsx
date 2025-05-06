@@ -193,11 +193,16 @@ const PublicRoadmap = () => {
                       return (
                         <li 
                           key={task.id} 
-                          className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow ${!hasVoted && !task.completed ? 'cursor-pointer hover:border-blue-300 hover:bg-blue-50' : ''}`}
+                          className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow ${!hasVoted && !task.completed ? 'cursor-pointer hover:border-blue-300 hover:bg-blue-50' : ''} relative`}
                           onClick={() => !hasVoted && !task.completed && handleVote(sectionData.id, phase, week, task.id)}
                           title={hasVoted ? "Vous avez déjà voté" : task.completed ? "Tâche déjà complétée" : "Cliquez pour voter"}
                         >
-                          <div className="flex items-center w-full p-3">
+                          {/* Indicateur visuel pour montrer qu'on peut cliquer (placé en premier pour être sous les éléments) */}
+                          {!hasVoted && !task.completed && (
+                            <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-200"></div>
+                          )}
+                          
+                          <div className="flex items-center w-full p-3 relative z-10">
                             {/* Indicateur de statut sans case à cocher */}
                             <div className="flex-shrink-0 mr-3">
                               {task.completed ? (
@@ -218,11 +223,6 @@ const PublicRoadmap = () => {
                                 <ThumbsUp size={16} />
                               </span>
                             </div>
-                            
-                            {/* Indicateur visuel pour montrer qu'on peut cliquer */}
-                            {!hasVoted && !task.completed && (
-                              <div className="absolute inset-0 bg-blue-500 opacity-0 hover:opacity-10 rounded-lg transition-opacity duration-200"></div>
-                            )}
                           </div>
                         </li>
                       )
