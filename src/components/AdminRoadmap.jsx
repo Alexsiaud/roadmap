@@ -455,8 +455,13 @@ const AdminRoadmap = ({ adminSecret }) => {
   const handleDragEnd = () => {
     console.log('Fin du drag');
     // Réinitialiser les états si le dépôt n'a pas fonctionné
-    setDraggedItem(null);
-    setDestinationTarget(null);
+    
+    // Ajout d'un petit délai avant de réinitialiser pour permettre 
+    // l'affichage des animations de transition
+    setTimeout(() => {
+      setDraggedItem(null);
+      setDestinationTarget(null);
+    }, 300);
   };
   
   // Fonction pour générer le lien public
@@ -603,6 +608,12 @@ const AdminRoadmap = ({ adminSecret }) => {
             </div>
           </div>
           
+          {/* Message informatif sur le glisser-déplacer */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md mb-4 text-blue-700 text-sm flex items-center">
+            <span className="font-semibold">Astuce :</span>
+            <span className="ml-2">Vous pouvez déplacer les tâches entre les semaines en les glissant-déposant (⌘ + glisser).</span>
+          </div>
+          
           {/* Contrôle du tri des tâches */}
           <div className="mb-4">
             <button 
@@ -653,7 +664,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                 .map(week => (
                 <div key={week}>
                   <div 
-                    className={`${weekStyle} ${sectionColors[sectionData.color].week} ${destinationTarget && destinationTarget.sectionId === sectionData.id && destinationTarget.phase === phase && destinationTarget.week === week ? 'bg-blue-50 border-blue-500' : ''}`}
+                    className={`${weekStyle} ${sectionColors[sectionData.color].week} ${destinationTarget && destinationTarget.sectionId === sectionData.id && destinationTarget.phase === phase && destinationTarget.week === week ? 'bg-blue-100 border-blue-500 border-2' : ''}`}
                     onDragEnter={() => handleDragEnter(sectionData.id, phase, week)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, sectionData.id, phase, week)}
@@ -699,13 +710,16 @@ const AdminRoadmap = ({ adminSecret }) => {
                           destinationTarget.phase === phase && 
                           destinationTarget.week === week ? 
                             draggedItem && draggedItem.task.id === task.id ? 'bg-gray-200' : 'border-l-4 border-blue-500' : ''
-                        }`}
+                        } cursor-move`}
                         draggable="true"
                         onDragStart={() => handleDragStart(sectionData.id, phase, week, task)}
                         onDragEnd={handleDragEnd}
                         onDragOver={handleDragOver}
+                        title="Glisser pour déplacer cette tâche entre les semaines"
                       >
                         <div className="flex items-center w-full p-3">
+                          {/* Indicateur de déplacement */}
+                          <div className="flex-shrink-0 mr-2 text-gray-400 cursor-move">&#8942;&#8942;</div>
                           <input 
                             type="checkbox" 
                             checked={task.completed} 
