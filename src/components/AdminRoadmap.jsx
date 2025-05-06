@@ -50,22 +50,31 @@ const AdminRoadmap = ({ adminSecret }) => {
   };
   
   // Gestion des formulaires d'édition
-  const startEdit = (type, sectionId, phase = null, week = null, taskId = null) => {
-    let data = null;
+  const startEdit = (type, sectionId, phase, week, taskId) => {
+    let data;
+    const section = roadmapData.sections.find(s => s.id === sectionId);
     
-    if (type === 'section') {
-      data = roadmapData.sections.find(s => s.id === sectionId);
-    } else if (type === 'phase') {
-      data = roadmapData.sections.find(s => s.id === sectionId).phases[phase];
-    } else if (type === 'week') {
-      data = roadmapData.sections.find(s => s.id === sectionId).phases[phase][week];
-    } else if (type === 'task') {
-      const section = roadmapData.sections.find(s => s.id === sectionId);
-      const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
-      data = section.phases[phase][week].tasks[taskIndex];
+    if (type === 'section' && section) {
+      data = { ...section };
+    } else if (type === 'phase' && section && section.phases[phase]) {
+      data = {
+        ...section.phases[phase],
+        id: phase // Ajouter l'ID de la phase pour l'édition
+      };
+    } else if (type === 'week' && section && section.phases[phase] && section.phases[phase][week]) {
+      data = {
+        ...section.phases[phase][week],
+        id: week // Ajouter l'ID de la semaine pour l'édition
+      };
+    } else if (type === 'task' && section && section.phases[phase] && section.phases[phase][week]) {
+      data = section.phases[phase][week].tasks.find(t => t.id === taskId);
     }
     
-    setEditMode({ type, sectionId, phase, week, taskId, data });
+    if (data) {
+      setEditMode({ type, sectionId, phase, week, taskId, data });
+    } else {
+      console.error('Impossible de trouver les données pour l\'édition');
+    }
   };
   
   const cancelEdit = () => {
@@ -288,6 +297,11 @@ const AdminRoadmap = ({ adminSecret }) => {
     setDestinationTarget({ sectionId, phase, week });
   };
   
+  const handleDragOver = (e) => {
+    // Empêcher le comportement par défaut pour permettre le drop
+    e.preventDefault();
+  };
+  
   const handleDragEnd = () => {
     if (!draggedItem || !destinationTarget) {
       setDraggedItem(null);
@@ -323,7 +337,7 @@ const AdminRoadmap = ({ adminSecret }) => {
   // Fonction pour générer le lien public
   const getPublicLink = () => {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/`;
+    return `${baseUrl}/roadmap/#/`;
   };
   
   // Rendu des formulaires d'édition
@@ -516,6 +530,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                   <div 
                     className={`${weekStyle} ${sectionColors[sectionData.color].week}`}
                     onDragEnter={() => handleDragEnter(sectionData.id, phase, week)}
+                    onDragOver={handleDragOver}
                   >
                     <span>{sectionData.phases[phase][week].title}</span>
                     <div className="flex space-x-2">
@@ -557,11 +572,12 @@ const AdminRoadmap = ({ adminSecret }) => {
                           destinationTarget.sectionId === sectionData.id && 
                           destinationTarget.phase === phase && 
                           destinationTarget.week === week ? 
-                            draggedItem && draggedItem.task.id === task.id ? '' : 'pl-2' : ''
+                            draggedItem && draggedItem.task.id === task.id ? 'bg-gray-200' : 'pl-2 border-l-2 border-blue-500' : ''
                         }`}
                         draggable="true"
                         onDragStart={() => handleDragStart(sectionData.id, phase, week, task)}
                         onDragEnd={handleDragEnd}
+                        onDragOver={handleDragOver}
                       >
                         <input 
                           type="checkbox" 
