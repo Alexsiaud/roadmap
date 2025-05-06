@@ -805,25 +805,33 @@ const AdminRoadmap = ({ adminSecret }) => {
                             ) : renderIcon(task.icon, task.completed)}
                           </div>
                           
-                          {editingTask && editingTask.taskId === task.id ? (
-                            <input
-                              type="text"
-                              value={editingTask.text}
-                              onChange={(e) => updateEditingTaskText(e.target.value)}
-                              onKeyDown={handleInlineEditKeyDown}
-                              onBlur={saveInlineEdit}
-                              autoFocus
-              className="flex-grow p-1 px-2 border-b-2 border-blue-500 bg-blue-50 rounded outline-none w-full text-blue-700 font-medium"
-                            />
-                          ) : (
-                            <span 
-                              className={`flex-grow ${task.completed ? 'text-green-700 font-medium' : 'text-gray-700'} cursor-text`}
-                              onDoubleClick={() => startInlineEdit(sectionData.id, phase, week, task.id)}
-                              title="Double-cliquez pour modifier"
-                            >
-                              {task.text}
-                            </span>
-                          )}
+                          {/* Le contenu interne est modifiable par double-clic, mais le container reste traînable */}
+                          <div className="flex-grow" onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            if (!editingTask || editingTask.taskId !== task.id) {
+                              startInlineEdit(sectionData.id, phase, week, task.id);
+                            }
+                          }}>
+                            {editingTask && editingTask.taskId === task.id ? (
+                              <input
+                                type="text"
+                                value={editingTask.text}
+                                onChange={(e) => updateEditingTaskText(e.target.value)}
+                                onKeyDown={handleInlineEditKeyDown}
+                                onBlur={saveInlineEdit}
+                                onClick={(e) => e.stopPropagation()}
+                                autoFocus
+                                className="p-1 px-2 border-b-2 border-blue-500 bg-blue-50 rounded outline-none w-full text-blue-700 font-medium"
+                              />
+                            ) : (
+                              <span 
+                                className={`block ${task.completed ? 'text-green-700 font-medium' : 'text-gray-700'} cursor-text`}
+                                title="Double-cliquez pour modifier"
+                              >
+                                {task.text}
+                              </span>
+                            )}
+                          </div>
                           
                           {/* Badge de vote avec compteur */}
                           <div className="flex items-center bg-gray-50 rounded-full px-3 py-1 ml-2">
