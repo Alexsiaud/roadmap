@@ -208,15 +208,24 @@ const AdminRoadmap = ({ adminSecret }) => {
     
     if (section) {
       const phaseId = `phase${Object.keys(section.phases).length + 1}`;
-      section.phases[phaseId] = {
+      
+      // Créer la nouvelle phase avec 4 semaines directement
+      const newPhase = {
         title: 'Nouvelle Phase',
-        order: Object.keys(section.phases).length + 1,
-        semaine1: {
-          title: 'Semaine 1',
-          order: 1,
-          tasks: []
-        }
+        order: Object.keys(section.phases).length + 1
       };
+      
+      // Ajouter les 4 semaines
+      for (let i = 1; i <= 4; i++) {
+        newPhase[`semaine${i}`] = {
+          title: `Semaine ${i}`,
+          order: i,
+          tasks: []
+        };
+      }
+      
+      // Assigner la nouvelle phase avec ses 4 semaines
+      section.phases[phaseId] = newPhase;
       
       setRoadmapData(updatedRoadmapData);
     }
@@ -775,15 +784,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                 </div>
               ))}
               
-              {/* Bouton pour ajouter une semaine */}
-              <div className="ml-8 mb-4">
-                <button 
-                  onClick={() => addWeek(sectionData.id, phase)}
-                  className="flex items-center text-gray-500 hover:text-blue-500"
-                >
-                  <Plus size={16} className="mr-1" /> Ajouter une semaine
-                </button>
-              </div>
+              {/* Le bouton 'Ajouter une semaine' a été supprimé car nous ajoutons automatiquement 4 semaines lors de la création d'une phase */}
             </div>
           ))}
           
