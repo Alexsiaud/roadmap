@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { RoadmapProvider, useRoadmap } from './components/RoadmapContext';
 import PublicRoadmap from './components/PublicRoadmap';
+import LocalStorageCleaner from './components/LocalStorageCleaner';
 
 // AdminRoadmap est importé de manière dynamique
 const AdminRoadmap = React.lazy(() => import('./components/AdminRoadmap'));
@@ -50,6 +51,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<PublicRoadmap />} />
       <Route path="/admin" element={<AdminRoute />} />
+      <Route path="/cleaner" element={<LocalStorageCleaner />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
