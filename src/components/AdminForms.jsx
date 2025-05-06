@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-// Les styles sont définis directement
+import { styles } from './AdminRoadmapStyles';
 import { icons } from './AdminRoadmapUtils';
 
 // Formulaire d'édition de tâche
@@ -16,8 +16,8 @@ export const TaskEditForm = ({ data, onSave, onCancel }) => {
   };
 
   return (
-    <div className={styles.modalBackdropStyle}>
-      <div className={styles.modalStyle}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Éditer la tâche</h3>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
@@ -31,7 +31,7 @@ export const TaskEditForm = ({ data, onSave, onCancel }) => {
           name="text"
           value={taskData.text}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <label className="block mb-2">Icône</label>
@@ -39,7 +39,7 @@ export const TaskEditForm = ({ data, onSave, onCancel }) => {
           name="icon"
           value={taskData.icon}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         >
           {Object.keys(icons).map(icon => (
             <option key={icon} value={icon}>{icon}</option>
@@ -53,7 +53,7 @@ export const TaskEditForm = ({ data, onSave, onCancel }) => {
               name="completed"
               checked={taskData.completed}
               onChange={handleChange}
-              className={styles.checkboxStyle}
+              className="mr-2"
             />
             Terminée
           </label>
@@ -97,8 +97,8 @@ export const WeekEditForm = ({ data, onSave, onCancel }) => {
   };
 
   return (
-    <div className={styles.modalBackdropStyle}>
-      <div className={styles.modalStyle}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Éditer la semaine</h3>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
@@ -112,7 +112,7 @@ export const WeekEditForm = ({ data, onSave, onCancel }) => {
           name="title"
           value={weekData.title}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <label className="block mb-2">Ordre</label>
@@ -121,7 +121,7 @@ export const WeekEditForm = ({ data, onSave, onCancel }) => {
           name="order"
           value={weekData.order}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <label className="block mb-2">Badge (optionnel)</label>
@@ -130,19 +130,19 @@ export const WeekEditForm = ({ data, onSave, onCancel }) => {
           name="badge"
           value={weekData.badge || ''}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <div className="flex justify-end space-x-2 mt-4">
           <button 
             onClick={onCancel} 
-            className={`${styles.buttonStyle} ${styles.buttonSecondaryStyle}`}
+            className="py-2 px-4 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
           >
             Annuler
           </button>
           <button 
             onClick={() => onSave(weekData)} 
-            className={`${styles.buttonStyle} ${styles.buttonPrimaryStyle}`}
+            className="py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
           >
             Enregistrer
           </button>
@@ -165,8 +165,8 @@ export const PhaseEditForm = ({ data, onSave, onCancel }) => {
   };
 
   return (
-    <div className={styles.modalBackdropStyle}>
-      <div className={styles.modalStyle}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Éditer la phase</h3>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
@@ -180,7 +180,7 @@ export const PhaseEditForm = ({ data, onSave, onCancel }) => {
           name="title"
           value={phaseData.title}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <label className="block mb-2">Ordre</label>
@@ -189,19 +189,19 @@ export const PhaseEditForm = ({ data, onSave, onCancel }) => {
           name="order"
           value={phaseData.order}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <div className="flex justify-end space-x-2 mt-4">
           <button 
             onClick={onCancel} 
-            className={`${styles.buttonStyle} ${styles.buttonSecondaryStyle}`}
+            className="py-2 px-4 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
           >
             Annuler
           </button>
           <button 
             onClick={() => onSave(phaseData)} 
-            className={`${styles.buttonStyle} ${styles.buttonPrimaryStyle}`}
+            className="py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
           >
             Enregistrer
           </button>
@@ -225,8 +225,8 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
   };
 
   return (
-    <div className={styles.modalBackdropStyle}>
-      <div className={styles.modalStyle}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Éditer la section</h3>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
@@ -240,7 +240,7 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
           name="title"
           value={sectionData.title}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <label className="block mb-2">ID</label>
@@ -249,7 +249,7 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
           name="id"
           value={sectionData.id}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         />
         
         <label className="block mb-2">Couleur</label>
@@ -257,7 +257,7 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
           name="color"
           value={sectionData.color}
           onChange={handleChange}
-          className={styles.inputStyle}
+          className="w-full p-2 border rounded mb-4"
         >
           {colorOptions.map(color => (
             <option key={color} value={color}>{color}</option>
@@ -271,7 +271,7 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
               name="active"
               checked={sectionData.active}
               onChange={handleChange}
-              className={styles.checkboxStyle}
+              className="mr-2"
             />
             Active
           </label>
@@ -280,13 +280,13 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
         <div className="flex justify-end space-x-2 mt-4">
           <button 
             onClick={onCancel} 
-            className={`${styles.buttonStyle} ${styles.buttonSecondaryStyle}`}
+            className="py-2 px-4 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
           >
             Annuler
           </button>
           <button 
             onClick={() => onSave(sectionData)} 
-            className={`${styles.buttonStyle} ${styles.buttonPrimaryStyle}`}
+            className="py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
           >
             Enregistrer
           </button>

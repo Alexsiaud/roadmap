@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
-import { sectionColors } from './AdminRoadmapStyles';
+import { sectionColors, styles } from './AdminRoadmapStyles';
 import { renderIcon, calculateStats, generateId, sortTasksByVotes, createEmptyTask } from './AdminRoadmapUtils';
 import { TaskEditForm, WeekEditForm, PhaseEditForm, SectionEditForm } from './AdminForms';
 import TopVotedTasks from './TopVotedTasks';
@@ -468,7 +468,7 @@ const AdminRoadmap = ({ adminSecret }) => {
           <div className="mb-4">
             <button 
               onClick={() => setSortByVotes(!sortByVotes)}
-              className={sortByVotes ? styles.sortActiveStyle : styles.sortButtonStyle}
+              className={sortByVotes ? "px-3 py-1 bg-blue-500 text-white rounded text-sm" : "px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"}
             >
               <ThumbsUp size={14} className="inline mr-1" /> 
               {sortByVotes ? "Trier par ordre normal" : "Trier par votes"}
@@ -576,7 +576,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                         
                         {/* Affichage des votes */}
                         {task.votes > 0 && (
-                          <div className={styles.voteCountStyle}>
+                          <div className="ml-auto flex items-center text-blue-600 bg-blue-100 px-2 py-0.5 rounded text-sm">
                             <ThumbsUp size={14} className="mr-1" /> 
                             {task.votes}
                           </div>
