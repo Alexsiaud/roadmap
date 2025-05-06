@@ -5,34 +5,48 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Autoriser l'action à pousser sur la branche gh-pages
+# Autorisations pour GitHub Pages
 permissions:
   contents: write
   pages: write
   id-token: write
 
+# Configuration de l'environnement
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+  
 jobs:
+  # Job de construction
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+          cache: 'npm'
+      
       - name: Install dependencies
         run: npm install
+      
       - name: Build
-        run: CI=false npm run build
+        run: npm run build
         env:
           CI: false
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: ./build
+          path: "./build"
 
-  # Déploiement avec GitHub Pages
+  # Job de déploiement
   deploy:
     environment:
       name: github-pages
@@ -42,4 +56,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
