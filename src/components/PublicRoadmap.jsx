@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, ThumbsUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, ThumbsUp, ChevronDown, ChevronRight, Lock, Unlock } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
 
 const PublicRoadmap = () => {
@@ -10,6 +10,8 @@ const PublicRoadmap = () => {
   const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
   // État pour suivre les phases réduites (collapsées)
   const [collapsedPhases, setCollapsedPhases] = useState({});
+  // État pour le verrouillage des phases (empêche le développement manuel des phases complétées)
+  const [phaseLockState, setPhaseLockState] = useState(true);
   // États pour le drag & drop
   const [draggedSectionIndex, setDraggedSectionIndex] = useState(null);
   const [dragOverSectionIndex, setDragOverSectionIndex] = useState(null);
@@ -122,13 +124,42 @@ const PublicRoadmap = () => {
     return totalTasks > 0 ? allCompleted : false;
   };
   
+  // Obtenir le pourcentage de complétion d'une phase
+  const getPhaseCompletionPercentage = (section, phase) => {
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    Object.keys(section.phases[phase]).forEach(key => {
+      if (key !== 'title' && key !== 'order' && section.phases[phase][key].tasks) {
+        section.phases[phase][key].tasks.forEach(task => {
+          totalTasks++;
+          if (task.completed) completedTasks++;
+        });
+      }
+    });
+    
+    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  };
+  
   // Gérer le clic sur une phase pour la développer/réduire
   const togglePhase = (sectionId, phase) => {
     const key = `${sectionId}-${phase}`;
+    const isCompleted = activeSection && areAllTasksCompleted(sectionData, phase);
+    
+    // Si la phase est complétée et que le verrouillage est activé, ne rien faire
+    if (isCompleted && phaseLockState && !collapsedPhases[key]) {
+      return;
+    }
+    
     setCollapsedPhases(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
+  };
+  
+  // Basculer l'état de verrouillage des phases
+  const toggleLockState = () => {
+    setPhaseLockState(!phaseLockState);
   };
   
   // Effet pour réduire automatiquement les phases dont toutes les tâches sont complétées
@@ -139,7 +170,7 @@ const PublicRoadmap = () => {
     roadmapData.sections.forEach(section => {
       Object.keys(section.phases).forEach(phase => {
         const key = `${section.id}-${phase}`;
-        if (areAllTasksCompleted(section, phase) && !newCollapsedPhases[key]) {
+        if (areAllTasksCompleted(section, phase) && !newCollapsedPhases[key] && phaseLockState) {
           newCollapsedPhases[key] = true;
           changes = true;
         }
@@ -149,7 +180,7 @@ const PublicRoadmap = () => {
     if (changes) {
       setCollapsedPhases(newCollapsedPhases);
     }
-  }, [roadmapData, collapsedPhases]);
+  }, [roadmapData, collapsedPhases, phaseLockState]);
   
   // Calcul des statistiques pour la vue d'ensemble
   const calculateStats = () => {
@@ -249,26 +280,46 @@ const PublicRoadmap = () => {
             .map(phase => (
             <div key={phase} className="mb-8">
               <div 
-                className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between cursor-pointer`}
+                className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between cursor-pointer transition-all duration-300 hover:shadow-md`}
                 onClick={() => togglePhase(sectionData.id, phase)}
               >
                 <span className="flex items-center">
                   {collapsedPhases[`${sectionData.id}-${phase}`] ? 
-                    <ChevronRight className="mr-2" size={20} /> : 
-                    <ChevronDown className="mr-2" size={20} />
+                    <ChevronRight className="mr-2 transition-transform duration-300" size={20} /> : 
+                    <ChevronDown className="mr-2 transition-transform duration-300" size={20} />
                   }
                   <Calendar className="mr-2" size={20} /> 
-                  {sectionData.phases[phase].title}
+                  <span className="font-medium">{sectionData.phases[phase].title}</span>
                 </span>
-                {areAllTasksCompleted(sectionData, phase) && (
-                  <span className="text-xs bg-green-100 text-green-800 font-medium py-1 px-2 rounded-full">
-                    Complété
-                  </span>
-                )}
+                <div className="flex items-center space-x-2">
+                  {/* Indicateur de progression */}
+                  <div className="w-24 bg-gray-200 rounded-full h-3 hidden md:block">
+                    <div 
+                      className="bg-green-500 h-3 rounded-full transition-all duration-500 ease-in-out" 
+                      style={{ width: `${getPhaseCompletionPercentage(sectionData, phase)}%` }}
+                    ></div>
+                  </div>
+                  
+                  {/* Badge de complétion */}
+                  {areAllTasksCompleted(sectionData, phase) && (
+                    <span className="text-xs bg-green-100 text-green-800 font-medium py-1 px-2 rounded-full flex items-center">
+                      <CheckCircle className="mr-1" size={12} />
+                      Complétée
+                    </span>
+                  )}
+                  
+                  {/* Indicateur de verrouillage si la phase est complétée */}
+                  {areAllTasksCompleted(sectionData, phase) && phaseLockState && (
+                    <Lock size={16} className="text-gray-500" title="Cette phase est verrouillée car complétée" />
+                  )}
+                </div>
               </div>
               
               {/* Affichage des semaines et tâches */}
-              {!collapsedPhases[`${sectionData.id}-${phase}`] && Object.keys(sectionData.phases[phase])
+              <div
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${collapsedPhases[`${sectionData.id}-${phase}`] ? 'max-h-0 opacity-0' : 'max-h-[5000px] opacity-100'}`}
+              >
+                {Object.keys(sectionData.phases[phase])
                 .filter(key => key !== 'title' && key !== 'order')
                 .sort((a, b) => sectionData.phases[phase][a].order - sectionData.phases[phase][b].order)
                 .map(week => (
@@ -327,6 +378,7 @@ const PublicRoadmap = () => {
                   </ul>
                 </div>
               ))}
+              </div>
             </div>
           ))}
         </div>
@@ -334,7 +386,22 @@ const PublicRoadmap = () => {
       
       {/* Vue d'ensemble */}
       <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-        <h3 className="font-bold text-lg mb-4">Vue d'ensemble du projet</h3>
+        <h3 className="font-bold text-lg mb-2">Vue d'ensemble du projet</h3>
+        
+        {/* Contrôle de verrouillage des phases complétées */}
+        <div className="flex items-center mb-4 bg-white p-2 rounded cursor-pointer" onClick={toggleLockState}>
+          {phaseLockState ? (
+            <>
+              <Lock size={18} className="text-green-600 mr-2" />
+              <span className="text-sm text-gray-700">Les phases complétées sont automatiquement réduites</span>
+            </>
+          ) : (
+            <>
+              <Unlock size={18} className="text-blue-600 mr-2" />
+              <span className="text-sm text-gray-700">Les phases complétées peuvent être développées</span>
+            </>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-3 rounded shadow">
             <p className="text-gray-600">Progression</p>
