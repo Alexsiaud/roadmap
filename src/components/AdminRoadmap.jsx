@@ -81,33 +81,46 @@ const AdminRoadmap = ({ adminSecret }) => {
     setEditMode({ type: null, sectionId: null, phase: null, week: null, taskId: null, data: null });
   };
   
-  const saveEdit = () => {
-    const updatedRoadmapData = {...roadmapData};
-    const { type, sectionId, phase, week, taskId, data } = editMode;
+  const saveEdit = (data) => {
+    const { type, sectionId, phase, week, taskId } = editMode;
+    const updatedRoadmapData = JSON.parse(JSON.stringify(roadmapData)); // Copie profonde pour éviter les références
     
     if (type === 'section') {
       const sectionIndex = updatedRoadmapData.sections.findIndex(s => s.id === sectionId);
-      updatedRoadmapData.sections[sectionIndex] = data;
-      
-      // Mettre à jour activeSection si l'ID a changé
-      if (data.id !== sectionId) {
-        setActiveSection(data.id);
+      if (sectionIndex !== -1) {
+        // Conserver l'ID et les phases de la section
+        const { phases } = updatedRoadmapData.sections[sectionIndex];
+        updatedRoadmapData.sections[sectionIndex] = { ...data, phases };
       }
-    } 
-    else if (type === 'phase') {
+    } else if (type === 'phase') {
       const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
-      section.phases[phase] = data;
-    } 
-    else if (type === 'week') {
+      if (section) {
+        // Conserver les données existantes de la phase, sauf titre et ordre
+        const existingPhaseData = { ...section.phases[phase] };
+        const { title, order } = data;
+        // Mettre à jour uniquement le titre et l'ordre
+        section.phases[phase] = { ...existingPhaseData, title, order };
+      }
+    } else if (type === 'week') {
       const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
-      section.phases[phase][week] = data;
-    } 
-    else if (type === 'task') {
+      if (section && section.phases[phase]) {
+        // Conserver les tâches existantes
+        const { tasks } = section.phases[phase][week] || { tasks: [] };
+        const { title, order, badge } = data;
+        // Mettre à jour uniquement le titre, l'ordre et le badge
+        section.phases[phase][week] = { title, order, badge, tasks };
+      }
+    } else if (type === 'task') {
       const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
-      const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
-      section.phases[phase][week].tasks[taskIndex] = data;
+      if (section && section.phases[phase] && section.phases[phase][week]) {
+        const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
+        if (taskIndex !== -1) {
+          section.phases[phase][week].tasks[taskIndex] = { ...data };
+        }
+      }
     }
     
+    console.log('Données mises à jour:', updatedRoadmapData);
     setRoadmapData(updatedRoadmapData);
     cancelEdit();
   };
@@ -225,17 +238,28 @@ const AdminRoadmap = ({ adminSecret }) => {
   };
   
   const addTask = (sectionId, phase, week) => {
-    const updatedRoadmapData = {...roadmapData};
+    // Copie profonde pour éviter les problèmes de référence
+    const updatedRoadmapData = JSON.parse(JSON.stringify(roadmapData));
     const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
     
     if (section && section.phases[phase] && section.phases[phase][week]) {
+      // S'assurer que la propriété tasks existe
+      if (!section.phases[phase][week].tasks) {
+        section.phases[phase][week].tasks = [];
+      }
+      
       const newTask = createEmptyTask(sectionId, phase, week);
+      console.log('Nouvelle tâche créée:', newTask);
+      
       section.phases[phase][week].tasks.push(newTask);
       
       setRoadmapData(updatedRoadmapData);
       
       // Immédiatement éditer la nouvelle tâche
       startEdit('task', sectionId, phase, week, newTask.id);
+    } else {
+      console.error('Impossible d\'ajouter une tâche: la structure n\'est pas valide', 
+                   {sectionId, phase, week, section: !!section});
     }
   };
   

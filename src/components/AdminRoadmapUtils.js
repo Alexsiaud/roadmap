@@ -75,14 +75,17 @@ export const sortTasksByVotes = (tasks) => {
   return [...tasks].sort((a, b) => (b.votes || 0) - (a.votes || 0));
 };
 
-// Fonction pour créer une tâche vide
+// Fonction pour créer une tâche vide avec un ID unique
 export const createEmptyTask = (sectionId, phase, week) => {
-  const prefix = `${sectionId.substring(0, 3)}-${phase.substring(0, 1)}${week.substring(week.length - 1)}`;
   return {
-    id: generateId(prefix), 
-    text: '',
-    icon: 'FileText',
+    id: generateId('task'),
+    text: 'Nouvelle tâche',
+    icon: 'Task',
     completed: false,
-    votes: 0
+    votes: 0,
+    // Ajout des références pour faciliter le déplacement
+    sectionId: sectionId,
+    phase: phase,
+    week: week
   };
 };
