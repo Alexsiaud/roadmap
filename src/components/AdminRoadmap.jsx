@@ -701,12 +701,12 @@ const AdminRoadmap = ({ adminSecret }) => {
                             type="checkbox" 
                             checked={task.completed} 
                             onChange={() => handleTaskToggle(sectionData.id, phase, week, task.id)} 
-                            className={checkboxStyle}
+                            className="mr-2 w-5 h-5 cursor-pointer"
                           />
                           <div className="flex-shrink-0 mr-3">
                             {task.completed ? (
-                              <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-500 rounded-full">
-                                <CheckCircle size={16} />
+                              <span className="flex items-center justify-center w-7 h-7 bg-green-100 text-green-500 rounded-full">
+                                <CheckCircle size={20} />
                               </span>
                             ) : renderIcon(task.icon, task.completed)}
                           </div>
@@ -763,6 +763,14 @@ const AdminRoadmap = ({ adminSecret }) => {
                         </div>
                       </li>
                     ))}
+                    {/* Bouton pour ajouter une nouvelle tâche directement dans la liste */}
+                    <li 
+                      className="flex items-center p-3 bg-white border border-dashed border-blue-300 text-blue-500 hover:bg-blue-50 transition-all duration-200 rounded-lg mb-2 cursor-pointer"
+                      onClick={() => addTask(sectionData.id, phase, week)}
+                    >
+                      <Plus size={18} className="mr-2" />
+                      <span>Ajouter une tâche</span>
+                    </li>
                   </ul>
                 </div>
               ))}
