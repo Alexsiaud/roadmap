@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
-import { styles, sectionColors } from './AdminRoadmapStyles';
+import { sectionColors } from './AdminRoadmapStyles';
 import { renderIcon, calculateStats, generateId, sortTasksByVotes, createEmptyTask } from './AdminRoadmapUtils';
 import { TaskEditForm, WeekEditForm, PhaseEditForm, SectionEditForm } from './AdminForms';
 import TopVotedTasks from './TopVotedTasks';
@@ -380,9 +380,30 @@ const AdminRoadmap = ({ adminSecret }) => {
     }
   };
   
+  // Définir les styles réutilisables
+  const containerStyle = "container-main";
+  const titleStyle = "title-main";
+  const tabsContainerStyle = "section-tabs";
+  const tabStyle = "tab-item";
+  const activeTabStyle = "tab-active";
+  const inactiveTabStyle = "tab-inactive";
+  const monthStyle = "phase-header";
+  const weekStyle = "week-header border-l-4";
+  const taskListStyle = "task-list";
+  const taskStyle = "task-item";
+  const taskCompletedStyle = "ml-2 line-through text-gray-500";
+  const taskTextStyle = "ml-2";
+  const actionButtonStyle = "p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 hover:bg-blue-100 rounded";
+  const checkboxStyle = "mr-2";
+  const voteCountStyle = "ml-auto text-xs font-semibold text-gray-600 bg-blue-100 py-1 px-2 rounded-full flex items-center";
+  const adminHeaderStyle = "flex justify-between items-center mb-6 bg-gray-100 p-4 rounded";
+  const sortButtonStyle = "bg-gray-200 py-1 px-3 rounded text-sm hover:bg-gray-300";
+  const sortActiveStyle = "bg-blue-500 text-white py-1 px-3 rounded text-sm";
+  const modalBackdropStyle = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4";
+  
   return (
-    <div className={styles.containerStyle}>
-      <div className={styles.adminHeaderStyle}>
+    <div className={containerStyle}>
+      <div className={adminHeaderStyle}>
         <h1 className="text-2xl font-bold">Administration de la Roadmap</h1>
         <div>
           <a 
@@ -396,18 +417,18 @@ const AdminRoadmap = ({ adminSecret }) => {
         </div>
       </div>
       
-      <h2 className={styles.titleStyle}>Roadmap d'Implémentation IA - Application de Pré-saisie Comptable</h2>
+      <h2 className={titleStyle}>Roadmap d'Implémentation IA - Application de Pré-saisie Comptable</h2>
       
       {/* Résumé des votes */}
       <TopVotedTasks topVotedTasks={stats.topVotedTasks} />
       
       {/* Onglets de navigation */}
       <div className="flex justify-between items-center mb-4">
-        <div className={styles.tabsContainerStyle}>
+        <div className={tabsContainerStyle}>
           {roadmapData.sections.map(section => (
             <div
               key={section.id}
-              className={`${styles.tabStyle} ${section.id === activeSection ? styles.activeTabStyle : styles.inactiveTabStyle}`}
+              className={`${tabStyle} ${section.id === activeSection ? activeTabStyle : inactiveTabStyle}`}
               onClick={() => handleSectionChange(section.id)}
             >
               {section.title}
@@ -459,7 +480,7 @@ const AdminRoadmap = ({ adminSecret }) => {
             .sort((a, b) => sectionData.phases[a].order - sectionData.phases[b].order)
             .map(phase => (
             <div key={phase} className="mb-8">
-              <div className={`${styles.monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between`}>
+              <div className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between`}>
                 <span className="flex items-center">
                   <Calendar className="mr-2" size={20} /> 
                   {sectionData.phases[phase].title}
@@ -493,7 +514,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                 .map(week => (
                 <div key={week}>
                   <div 
-                    className={`${styles.weekStyle} ${sectionColors[sectionData.color].week}`}
+                    className={`${weekStyle} ${sectionColors[sectionData.color].week}`}
                     onDragEnter={() => handleDragEnter(sectionData.id, phase, week)}
                   >
                     <span>{sectionData.phases[phase][week].title}</span>
@@ -524,14 +545,14 @@ const AdminRoadmap = ({ adminSecret }) => {
                     </div>
                   </div>
                   
-                  <ul className={styles.taskListStyle}>
+                  <ul className={taskListStyle}>
                     {(sortByVotes 
                       ? sortTasksByVotes(sectionData.phases[phase][week].tasks)
                       : sectionData.phases[phase][week].tasks
                     ).map((task, index) => (
                       <li 
                         key={task.id} 
-                        className={`${styles.taskStyle} ${
+                        className={`${taskStyle} ${
                           destinationTarget && 
                           destinationTarget.sectionId === sectionData.id && 
                           destinationTarget.phase === phase && 
@@ -546,10 +567,10 @@ const AdminRoadmap = ({ adminSecret }) => {
                           type="checkbox" 
                           checked={task.completed} 
                           onChange={() => handleTaskToggle(sectionData.id, phase, week, task.id)} 
-                          className={styles.checkboxStyle}
+                          className={checkboxStyle}
                         />
                         {renderIcon(task.icon, task.completed)}
-                        <span className={task.completed ? styles.taskCompletedStyle : styles.taskTextStyle}>
+                        <span className={task.completed ? taskCompletedStyle : taskTextStyle}>
                           {task.text}
                         </span>
                         

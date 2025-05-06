@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { styles } from './AdminRoadmapStyles';
+// Les styles sont définis directement
 import { icons } from './AdminRoadmapUtils';
 
 // Formulaire d'édition de tâche
@@ -67,13 +67,13 @@ export const TaskEditForm = ({ data, onSave, onCancel }) => {
           <div className="flex space-x-2">
             <button 
               onClick={onCancel} 
-              className={`${styles.buttonStyle} ${styles.buttonSecondaryStyle}`}
+              className="py-2 px-4 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
             >
               Annuler
             </button>
             <button 
               onClick={() => onSave(taskData)} 
-              className={`${styles.buttonStyle} ${styles.buttonPrimaryStyle}`}
+              className="py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
             >
               Enregistrer
             </button>

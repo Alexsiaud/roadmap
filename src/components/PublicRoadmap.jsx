@@ -9,17 +9,17 @@ const PublicRoadmap = () => {
   );
   const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
 
-  // Styles CSS (similaires à ceux du composant éditable)
-  const containerStyle = "max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg";
-  const titleStyle = "text-2xl font-bold text-center mb-8 text-blue-800";
-  const tabsContainerStyle = "flex border-b mb-6";
-  const tabStyle = "px-4 py-2 cursor-pointer font-medium";
-  const activeTabStyle = "border-b-2 border-blue-500 text-blue-700";
-  const inactiveTabStyle = "text-gray-500 hover:text-gray-700";
-  const monthStyle = "mb-4 p-3 rounded-t-lg text-white font-bold flex items-center";
-  const weekStyle = "ml-8 mb-2 p-2 border-l-4 font-semibold flex justify-between items-center";
-  const taskListStyle = "ml-12 mb-4 space-y-2";
-  const taskStyle = "p-2 rounded flex items-center hover:bg-gray-50 group";
+  // Les styles sont maintenant définis dans index.css comme classes réutilisables
+  const containerStyle = "container-main";
+  const titleStyle = "title-main";
+  const tabsContainerStyle = "section-tabs";
+  const tabStyle = "tab-item";
+  const activeTabStyle = "tab-active";
+  const inactiveTabStyle = "tab-inactive";
+  const monthStyle = "phase-header";
+  const weekStyle = "week-header border-l-4";
+  const taskListStyle = "task-list";
+  const taskStyle = "task-item";
   const taskCompletedStyle = "ml-2 line-through text-gray-500";
   const taskTextStyle = "ml-2";
   const voteButtonStyle = "ml-auto p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-100 rounded";
