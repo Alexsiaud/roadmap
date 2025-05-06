@@ -1,4 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { apiService } from '../services/apiService';
+import { v4 as uuidv4 } from 'uuid';
 
 // Structure initiale des données
 const initialRoadmapData = {
@@ -49,31 +51,95 @@ const RoadmapContext = createContext();
 
 // Provider component
 export const RoadmapProvider = ({ children }) => {
-  const [roadmapData, setRoadmapData] = useState(() => {
-    // Essayer de récupérer les données du localStorage
-    const savedData = localStorage.getItem('roadmapData');
-    return savedData ? JSON.parse(savedData) : initialRoadmapData;
+  const [roadmapData, setRoadmapData] = useState(initialRoadmapData);
+  const [userVotes, setUserVotes] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(() => {
+    // Récupérer ou générer un ID utilisateur unique
+    const savedUserId = localStorage.getItem('userId');
+    const newUserId = savedUserId || uuidv4();
+    if (!savedUserId) {
+      localStorage.setItem('userId', newUserId);
+    }
+    return newUserId;
   });
   
-  const [userVotes, setUserVotes] = useState(() => {
-    const savedVotes = localStorage.getItem('userVotes');
-    return savedVotes ? JSON.parse(savedVotes) : {};
-  });
+  // Initialisation des données depuis l'API REST
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setLoading(true);
+        // Récupérer les données du roadmap
+        const data = await apiService.fetchRoadmap();
+        setRoadmapData(data || initialRoadmapData);
+        
+        // Récupérer les votes de l'utilisateur
+        const votes = await apiService.getUserVotes(userId);
+        setUserVotes(votes || {});
+        
+        // Sauvegarder la date de dernière mise à jour
+        localStorage.setItem('lastUpdateTimestamp', Date.now().toString());
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation des données:', error);
+        // Fallback au localStorage en cas d'erreur
+        const savedData = localStorage.getItem('roadmapData');
+        if (savedData) setRoadmapData(JSON.parse(savedData));
+        
+        const savedVotes = localStorage.getItem('userVotes');
+        if (savedVotes) setUserVotes(JSON.parse(savedVotes));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeData();
+  }, [userId]);
   
-  // Admin est déterminé par la route actuelle, pas besoin de state
-
-  // Sauvegarder les données dans localStorage à chaque changement
+  // Vérifier périodiquement les mises à jour
   useEffect(() => {
-    localStorage.setItem('roadmapData', JSON.stringify(roadmapData));
-  }, [roadmapData]);
-
-  // Sauvegarder les votes utilisateur
+    // Fonction pour vérifier les mises à jour
+    const checkForUpdates = async () => {
+      if (loading) return; // Ne pas vérifier pendant le chargement initial
+      
+      try {
+        const lastUpdateTimestamp = localStorage.getItem('lastUpdateTimestamp') || '0';
+        const updates = await apiService.checkForUpdates(lastUpdateTimestamp);
+        
+        if (updates && updates.hasChanges) {
+          // Récupérer les données mises à jour
+          const data = await apiService.fetchRoadmap();
+          setRoadmapData(data);
+          
+          // Mettre à jour la date de dernière mise à jour
+          localStorage.setItem('lastUpdateTimestamp', Date.now().toString());
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification des mises à jour:', error);
+      }
+    };
+    
+    // Vérifier les mises à jour toutes les 30 secondes
+    const intervalId = setInterval(checkForUpdates, 30000);
+    
+    // Nettoyer l'intervalle lorsque le composant est démonté
+    return () => clearInterval(intervalId);
+  }, [loading]);
+  
+  // Maintien du localStorage comme fallback
   useEffect(() => {
-    localStorage.setItem('userVotes', JSON.stringify(userVotes));
-  }, [userVotes]);
-
-  // Fonction pour ajouter un vote
-  const voteForTask = (sectionId, phase, week, taskId) => {
+    if (!loading) {
+      localStorage.setItem('roadmapData', JSON.stringify(roadmapData));
+    }
+  }, [roadmapData, loading]);
+  
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem('userVotes', JSON.stringify(userVotes));
+    }
+  }, [userVotes, loading]);
+  
+  // Fonction pour ajouter un vote (avec API REST)
+  const voteForTask = async (sectionId, phase, week, taskId) => {
     // Vérifier si l'utilisateur a déjà voté pour cette tâche
     const voteKey = `${sectionId}-${phase}-${week}-${taskId}`;
     
@@ -82,26 +148,50 @@ export const RoadmapProvider = ({ children }) => {
       return false;
     }
     
-    // Ajouter le vote
-    setRoadmapData(prevData => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      const section = newData.sections.find(s => s.id === sectionId);
-      if (section && section.phases[phase] && section.phases[phase][week]) {
-        const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
-        if (taskIndex !== -1) {
-          section.phases[phase][week].tasks[taskIndex].votes += 1;
-        }
+    try {
+      // Préparer les données du vote
+      const voteData = {
+        voteKey,
+        sectionId,
+        phase,
+        week,
+        taskId
+      };
+      
+      // Appeler l'API pour ajouter le vote
+      const response = await apiService.addVote(userId, voteData);
+      
+      if (response.success) {
+        // Mettre à jour l'état local des votes
+        setUserVotes(prev => ({
+          ...prev,
+          [voteKey]: true
+        }));
+        
+        // Mettre à jour le roadmapData localement pour refléter le vote
+        setRoadmapData(prev => {
+          const newData = JSON.parse(JSON.stringify(prev));
+          const section = newData.sections.find(s => s.id === sectionId);
+          if (section && section.phases[phase] && section.phases[phase][week]) {
+            const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+              section.phases[phase][week].tasks[taskIndex].votes += 1;
+            }
+          }
+          return newData;
+        });
+        
+        // Mettre à jour le timestamp de dernière mise à jour
+        localStorage.setItem('lastUpdateTimestamp', Date.now().toString());
+        
+        return true;
       }
-      return newData;
-    });
-    
-    // Enregistrer que l'utilisateur a voté
-    setUserVotes(prev => ({
-      ...prev,
-      [voteKey]: true
-    }));
-    
-    return true;
+      
+      return false;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du vote:', error);
+      return false;
+    }
   };
 
   // Méthode pour vérifier si une action admin est autorisée
@@ -114,27 +204,61 @@ export const RoadmapProvider = ({ children }) => {
   };
   
   // Fonction pour réordonner les sections
-  const reorderSections = (fromIndex, toIndex) => {
+  const reorderSections = async (fromIndex, toIndex) => {
     if (fromIndex === toIndex) return; // Rien à faire si même position
     
-    setRoadmapData(prevData => {
-      const newData = JSON.parse(JSON.stringify(prevData));
+    try {
+      // Mettre à jour localement
+      const newData = JSON.parse(JSON.stringify(roadmapData));
       const [movedSection] = newData.sections.splice(fromIndex, 1);
       newData.sections.splice(toIndex, 0, movedSection);
-      return newData;
-    });
+      
+      // Mettre à jour l'état local
+      setRoadmapData(newData);
+      
+      // Synchroniser avec l'API
+      await apiService.updateRoadmap(newData);
+      
+      // Mettre à jour le timestamp de dernière mise à jour
+      localStorage.setItem('lastUpdateTimestamp', Date.now().toString());
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors du réordonnement des sections:', error);
+      return false;
+    }
+  };
+
+  // Fonction pour mettre à jour les données du roadmap
+  const updateRoadmapData = async (newData) => {
+    try {
+      // Mettre à jour l'état local
+      setRoadmapData(newData);
+      
+      // Synchroniser avec l'API
+      await apiService.updateRoadmap(newData);
+      
+      // Mettre à jour le timestamp de dernière mise à jour
+      localStorage.setItem('lastUpdateTimestamp', Date.now().toString());
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des données:', error);
+      return false;
+    }
   };
 
   return (
     <RoadmapContext.Provider value={{
       roadmapData,
-      setRoadmapData,
+      setRoadmapData: updateRoadmapData,
       voteForTask,
       checkAdminAccess,
       userVotes,
-      reorderSections
+      reorderSections,
+      loading
     }}>
-      {children}
+      {loading ? <div className="p-4 text-center">Chargement des données...</div> : children}
     </RoadmapContext.Provider>
   );
 };
