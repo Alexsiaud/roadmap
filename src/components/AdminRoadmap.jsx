@@ -436,7 +436,19 @@ const AdminRoadmap = ({ adminSecret }) => {
         
         // Copie de la tâche sans les informations de position
         const { fromSection, fromPhase, fromWeek, ...taskWithoutPosition } = task;
-        toSection.phases[phase][week].tasks.push(taskWithoutPosition);
+        
+        // Si le tri par votes est actif, insérer la tâche au bon endroit selon les votes
+        if (sortByVotes) {
+          const tasks = toSection.phases[phase][week].tasks;
+          // Trouver l'index d'insertion basé sur les votes
+          let insertIndex = tasks.findIndex(t => (t.votes || 0) < (taskWithoutPosition.votes || 0));
+          if (insertIndex === -1) insertIndex = tasks.length;
+          // Insérer la tâche à la bonne position
+          tasks.splice(insertIndex, 0, taskWithoutPosition);
+        } else {
+          // Sinon, ajouter simplement à la fin de la liste
+          toSection.phases[phase][week].tasks.push(taskWithoutPosition);
+        }
         
         console.log('Déplacement réussi');
       }
