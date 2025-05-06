@@ -3,20 +3,23 @@ import { ThumbsUp } from 'lucide-react';
 import { renderIcon } from './AdminRoadmapUtils';
 
 const TopVotedTasks = ({ topVotedTasks }) => {
-  if (!topVotedTasks || topVotedTasks.length === 0) {
+  // Ne garde que les tâches avec au moins 1 vote
+  const tasksWithVotes = topVotedTasks?.filter(item => item.task.votes && item.task.votes > 0) || [];
+
+  if (!tasksWithVotes.length) {
     return (
       <div className="bg-white p-4 rounded shadow mb-6">
-        <h3 className="font-bold text-lg mb-2">Tâches les plus votées</h3>
-        <p className="text-gray-500">Aucun vote n'a encore été enregistré.</p>
+        <h3 className="font-bold text-lg mb-2">Tâches les plus votées (non validées)</h3>
+        <p className="text-gray-500">Aucune tâche non validée n'a encore reçu de vote.</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white p-4 rounded shadow mb-6">
-      <h3 className="font-bold text-lg mb-4">Tâches les plus votées</h3>
+      <h3 className="font-bold text-lg mb-4">Tâches les plus votées (non validées)</h3>
       <div className="space-y-3">
-        {topVotedTasks.map((item, index) => (
+        {tasksWithVotes.map((item, index) => (
           <div key={item.task.id} className="flex items-center p-2 border-b last:border-b-0">
             <span className="bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center mr-3">
               {index + 1}

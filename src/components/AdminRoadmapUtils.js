@@ -34,16 +34,18 @@ export const calculateStats = (roadmapData) => {
             if (task.completed) completedTasks++;
             totalVotes += task.votes || 0;
             
-            // Collecter les tâches avec leurs votes pour le tri
-            topVotedTasks.push({
-              sectionId: section.id,
-              sectionTitle: section.title,
-              phase,
-              phaseTitle: section.phases[phase].title,
-              week: key,
-              weekTitle: section.phases[phase][key].title,
-              task
-            });
+            // Collecter uniquement les tâches non complétées avec leurs votes pour le tri
+            if (!task.completed) {
+              topVotedTasks.push({
+                sectionId: section.id,
+                sectionTitle: section.title,
+                phase,
+                phaseTitle: section.phases[phase].title,
+                week: key,
+                weekTitle: section.phases[phase][key].title,
+                task
+              });
+            }
           });
         }
       });
