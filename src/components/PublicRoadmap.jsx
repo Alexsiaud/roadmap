@@ -192,13 +192,12 @@ const PublicRoadmap = () => {
                       
                       return (
                         <li key={task.id} className={taskStyle}>
-                          <input 
-                            type="checkbox" 
-                            checked={task.completed} 
-                            readOnly 
-                            disabled
-                            className="cursor-not-allowed"
-                          />
+                          {/* Indicateur de statut sans case à cocher */}
+                          {task.completed && (
+                            <span className="text-green-500 flex-shrink-0">
+                              <CheckCircle size={16} className="mr-1" />
+                            </span>
+                          )}
                           {renderIcon(task.icon, task.completed)}
                           <span className={task.completed ? taskCompletedStyle : taskTextStyle}>
                             {task.text}

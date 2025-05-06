@@ -82,41 +82,75 @@ const AdminRoadmap = ({ adminSecret }) => {
   };
   
   const saveEdit = (data) => {
+    console.log('Sauvegarde des données:', data, 'Mode d\'édition:', editMode);
+    
     const { type, sectionId, phase, week, taskId } = editMode;
     const updatedRoadmapData = JSON.parse(JSON.stringify(roadmapData)); // Copie profonde pour éviter les références
     
     if (type === 'section') {
       const sectionIndex = updatedRoadmapData.sections.findIndex(s => s.id === sectionId);
       if (sectionIndex !== -1) {
-        // Conserver l'ID et les phases de la section
+        // Conserver les phases de la section
         const { phases } = updatedRoadmapData.sections[sectionIndex];
-        updatedRoadmapData.sections[sectionIndex] = { ...data, phases };
+        const updatedSection = { ...data };
+        
+        // S'assurer que les phases sont préservées
+        if (!updatedSection.phases && phases) {
+          updatedSection.phases = phases;
+        }
+        
+        updatedRoadmapData.sections[sectionIndex] = updatedSection;
+        
+        // Mettre à jour la section active si nécessaire
+        if (sectionId === activeSection) {
+          setActiveSection(updatedSection.id);
+        }
       }
     } else if (type === 'phase') {
       const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
-      if (section) {
-        // Conserver les données existantes de la phase, sauf titre et ordre
-        const existingPhaseData = { ...section.phases[phase] };
-        const { title, order } = data;
-        // Mettre à jour uniquement le titre et l'ordre
-        section.phases[phase] = { ...existingPhaseData, title, order };
+      if (section && section.phases && section.phases[phase]) {
+        // Préserver toutes les semaines et leur contenu
+        const existingPhase = { ...section.phases[phase] };
+        
+        // Ne mettre à jour que le titre et l'ordre
+        existingPhase.title = data.title;
+        existingPhase.order = data.order;
+        
+        // S'assurer que la phase existe toujours
+        section.phases[phase] = existingPhase;
       }
     } else if (type === 'week') {
       const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
-      if (section && section.phases[phase]) {
+      if (section && section.phases && section.phases[phase]) {
         // Conserver les tâches existantes
-        const { tasks } = section.phases[phase][week] || { tasks: [] };
-        const { title, order, badge } = data;
+        const existingWeek = section.phases[phase][week] || {};
+        const tasks = existingWeek.tasks || [];
+        
         // Mettre à jour uniquement le titre, l'ordre et le badge
-        section.phases[phase][week] = { title, order, badge, tasks };
+        section.phases[phase][week] = {
+          ...existingWeek,
+          title: data.title,
+          order: data.order,
+          badge: data.badge,
+          tasks: tasks
+        };
       }
     } else if (type === 'task') {
       const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
       if (section && section.phases[phase] && section.phases[phase][week]) {
-        const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
+        const tasks = section.phases[phase][week].tasks || [];
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        
         if (taskIndex !== -1) {
-          section.phases[phase][week].tasks[taskIndex] = { ...data };
+          // Mettre à jour la tâche existante
+          tasks[taskIndex] = { ...data };
+        } else {
+          // Ajouter une nouvelle tâche
+          tasks.push({ ...data });
         }
+        
+        // S'assurer que le tableau de tâches est mis à jour
+        section.phases[phase][week].tasks = tasks;
       }
     }
     
@@ -324,6 +358,18 @@ const AdminRoadmap = ({ adminSecret }) => {
   const handleDragOver = (e) => {
     // Empêcher le comportement par défaut pour permettre le drop
     e.preventDefault();
+    e.stopPropagation();
+  };
+  
+  const handleDrop = (e, sectionId, phase, week) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Simuler un fin de glisser-déposer
+    if (draggedItem) {
+      setDestinationTarget({ sectionId, phase, week });
+      handleDragEnd();
+    }
   };
   
   const handleDragEnd = () => {
@@ -366,17 +412,19 @@ const AdminRoadmap = ({ adminSecret }) => {
   
   // Rendu des formulaires d'édition
   const renderEditForms = () => {
-    if (!editMode.type || !editMode.data) return null;
+    if (!editMode.type || !editMode.data) {
+      console.error('Mode d\'édition ou données manquantes:', editMode);
+      return null;
+    }
     
+    console.log('Mode d\'édition actuel:', editMode);
+
     switch (editMode.type) {
       case 'task':
         return (
           <TaskEditForm 
             data={editMode.data} 
-            onSave={(data) => {
-              setEditMode({ ...editMode, data });
-              saveEdit();
-            }}
+            onSave={saveEdit}
             onCancel={cancelEdit}
           />
         );
@@ -384,10 +432,7 @@ const AdminRoadmap = ({ adminSecret }) => {
         return (
           <WeekEditForm 
             data={editMode.data} 
-            onSave={(data) => {
-              setEditMode({ ...editMode, data });
-              saveEdit();
-            }}
+            onSave={saveEdit}
             onCancel={cancelEdit}
           />
         );
@@ -395,10 +440,7 @@ const AdminRoadmap = ({ adminSecret }) => {
         return (
           <PhaseEditForm 
             data={editMode.data} 
-            onSave={(data) => {
-              setEditMode({ ...editMode, data });
-              saveEdit();
-            }}
+            onSave={saveEdit}
             onCancel={cancelEdit}
           />
         );
@@ -406,10 +448,7 @@ const AdminRoadmap = ({ adminSecret }) => {
         return (
           <SectionEditForm 
             data={editMode.data} 
-            onSave={(data) => {
-              setEditMode({ ...editMode, data });
-              saveEdit();
-            }}
+            onSave={saveEdit}
             onCancel={cancelEdit}
           />
         );
@@ -552,9 +591,10 @@ const AdminRoadmap = ({ adminSecret }) => {
                 .map(week => (
                 <div key={week}>
                   <div 
-                    className={`${weekStyle} ${sectionColors[sectionData.color].week}`}
+                    className={`${weekStyle} ${sectionColors[sectionData.color].week} ${destinationTarget && destinationTarget.sectionId === sectionData.id && destinationTarget.phase === phase && destinationTarget.week === week ? 'bg-blue-50 border-blue-500' : ''}`}
                     onDragEnter={() => handleDragEnter(sectionData.id, phase, week)}
                     onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, sectionData.id, phase, week)}
                   >
                     <span>{sectionData.phases[phase][week].title}</span>
                     <div className="flex space-x-2">
