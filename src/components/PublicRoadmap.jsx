@@ -191,7 +191,12 @@ const PublicRoadmap = () => {
                       const hasVoted = userVotes[voteKey];
                       
                       return (
-                        <li key={task.id} className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow`}>
+                        <li 
+                          key={task.id} 
+                          className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow ${!hasVoted && !task.completed ? 'cursor-pointer hover:border-blue-300 hover:bg-blue-50' : ''}`}
+                          onClick={() => !hasVoted && !task.completed && handleVote(sectionData.id, phase, week, task.id)}
+                          title={hasVoted ? "Vous avez déjà voté" : task.completed ? "Tâche déjà complétée" : "Cliquez pour voter"}
+                        >
                           <div className="flex items-center w-full p-3">
                             {/* Indicateur de statut sans case à cocher */}
                             <div className="flex-shrink-0 mr-3">
@@ -206,18 +211,18 @@ const PublicRoadmap = () => {
                               {task.text}
                             </span>
                             
-                            {/* Bouton de vote et compteur */}
+                            {/* Badge de vote avec compteur */}
                             <div className={`flex items-center ${hasVoted ? 'bg-blue-100' : 'bg-gray-50'} rounded-full px-3 py-1 ml-2`}>
                               <span className="font-semibold text-gray-700 mr-1">{task.votes || 0}</span>
-                              <button 
-                                className={hasVoted ? 'text-blue-500 cursor-not-allowed' : 'text-gray-500 hover:text-blue-500'}
-                                onClick={() => !hasVoted && handleVote(sectionData.id, phase, week, task.id)}
-                                title={hasVoted ? "Vous avez déjà voté" : "Voter pour cette tâche"}
-                                disabled={hasVoted}
-                              >
+                              <span className={hasVoted ? 'text-blue-500' : 'text-gray-500'}>
                                 <ThumbsUp size={16} />
-                              </button>
+                              </span>
                             </div>
+                            
+                            {/* Indicateur visuel pour montrer qu'on peut cliquer */}
+                            {!hasVoted && !task.completed && (
+                              <div className="absolute inset-0 bg-blue-500 opacity-0 hover:opacity-10 rounded-lg transition-opacity duration-200"></div>
+                            )}
                           </div>
                         </li>
                       )
