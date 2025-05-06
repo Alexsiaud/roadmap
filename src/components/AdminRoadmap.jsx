@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp, ChevronRight, Lock, Unlock } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
 import { sectionColors, styles } from './AdminRoadmapStyles';
 import { renderIcon, calculateStats, generateId, sortTasksByVotes, createEmptyTask } from './AdminRoadmapUtils';
@@ -26,12 +26,92 @@ const AdminRoadmap = ({ adminSecret }) => {
   const [sortByVotes, setSortByVotes] = useState(false);
   const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
   const [editingTask, setEditingTask] = useState(null); // { sectionId, phase, week, taskId, text }
+  // État pour suivre les phases réduites (collapsées)
+  const [collapsedPhases, setCollapsedPhases] = useState({});
+  // État pour le verrouillage des phases (empêche le développement manuel des phases complétées)
+  const [phaseLockState, setPhaseLockState] = useState(true);
   
   // Obtenir la section active
   const sectionData = roadmapData.sections.find(s => s.id === activeSection);
   
   // Calculer les statistiques
   const stats = calculateStats(roadmapData);
+  
+  // Fonction pour vérifier si toutes les tâches d'une phase sont complétées
+  const areAllTasksCompleted = (section, phase) => {
+    let allCompleted = true;
+    let totalTasks = 0;
+    
+    Object.keys(section.phases[phase]).forEach(key => {
+      if (key !== 'title' && key !== 'order' && section.phases[phase][key].tasks) {
+        section.phases[phase][key].tasks.forEach(task => {
+          totalTasks++;
+          if (!task.completed) allCompleted = false;
+        });
+      }
+    });
+    
+    // Retourne false si aucune tâche dans cette phase
+    return totalTasks > 0 ? allCompleted : false;
+  };
+  
+  // Obtenir le pourcentage de complétion d'une phase
+  const getPhaseCompletionPercentage = (section, phase) => {
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    Object.keys(section.phases[phase]).forEach(key => {
+      if (key !== 'title' && key !== 'order' && section.phases[phase][key].tasks) {
+        section.phases[phase][key].tasks.forEach(task => {
+          totalTasks++;
+          if (task.completed) completedTasks++;
+        });
+      }
+    });
+    
+    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  };
+  
+  // Gérer le clic sur une phase pour la développer/réduire
+  const togglePhase = (sectionId, phase) => {
+    const key = `${sectionId}-${phase}`;
+    const isCompleted = sectionData && areAllTasksCompleted(sectionData, phase);
+    
+    // Si la phase est complétée et que le verrouillage est activé, ne rien faire
+    if (isCompleted && phaseLockState && !collapsedPhases[key]) {
+      return;
+    }
+    
+    setCollapsedPhases(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+  
+  // Basculer l'état de verrouillage des phases
+  const toggleLockState = () => {
+    setPhaseLockState(!phaseLockState);
+  };
+  
+  // Effet pour réduire automatiquement les phases dont toutes les tâches sont complétées
+  useEffect(() => {
+    const newCollapsedPhases = {...collapsedPhases};
+    let changes = false;
+    
+    roadmapData.sections.forEach(section => {
+      Object.keys(section.phases).forEach(phase => {
+        const key = `${section.id}-${phase}`;
+        if (areAllTasksCompleted(section, phase) && !newCollapsedPhases[key] && phaseLockState) {
+          newCollapsedPhases[key] = true;
+          changes = true;
+        }
+      });
+    });
+    
+    if (changes) {
+      setCollapsedPhases(newCollapsedPhases);
+    }
+  }, [roadmapData, collapsedPhases, phaseLockState]);
   
   // Navigation entre les sections
   const handleSectionChange = (sectionId) => {
@@ -194,16 +274,15 @@ const AdminRoadmap = ({ adminSecret }) => {
   const deleteSection = (sectionId) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette section ?")) return;
     
-    const updatedSections = roadmapData.sections.filter(s => s.id !== sectionId);
+    // Copie profonde pour éviter les problèmes de référence
+    const updatedRoadmapData = JSON.parse(JSON.stringify(roadmapData));
+    updatedRoadmapData.sections = updatedRoadmapData.sections.filter(s => s.id !== sectionId);
     
-    setRoadmapData({
-      ...roadmapData,
-      sections: updatedSections
-    });
+    setRoadmapData(updatedRoadmapData);
     
     // Si la section supprimée est active, sélectionner la première section restante
-    if (sectionId === activeSection && updatedSections.length > 0) {
-      setActiveSection(updatedSections[0].id);
+    if (sectionId === activeSection && updatedRoadmapData.sections.length > 0) {
+      setActiveSection(updatedRoadmapData.sections[0].id);
     }
   };
   
@@ -754,8 +833,8 @@ const AdminRoadmap = ({ adminSecret }) => {
             <span className="ml-2">Vous pouvez déplacer les tâches entre les semaines en les glissant-déposant (⌘ + glisser).</span>
           </div>
           
-          {/* Contrôle du tri des tâches */}
-          <div className="mb-4">
+          {/* Contrôle du tri des tâches et état de verrouillage des phases */}
+          <div className="mb-4 flex items-center justify-between">
             <button 
               onClick={() => setSortByVotes(!sortByVotes)}
               className={sortByVotes ? "px-3 py-1 bg-blue-500 text-white rounded text-sm" : "px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"}
@@ -763,6 +842,21 @@ const AdminRoadmap = ({ adminSecret }) => {
               <ThumbsUp size={14} className="inline mr-1" /> 
               {sortByVotes ? "Trier par ordre normal" : "Trier par votes"}
             </button>
+            
+            {/* Contrôle de verrouillage des phases complétées */}
+            <div className="flex items-center px-3 py-1 bg-white border border-gray-200 rounded cursor-pointer" onClick={toggleLockState}>
+              {phaseLockState ? (
+                <>
+                  <Lock size={14} className="text-green-600 mr-1" />
+                  <span className="text-xs text-gray-700">Réduction auto des phases complétées</span>
+                </>
+              ) : (
+                <>
+                  <Unlock size={14} className="text-blue-600 mr-1" />
+                  <span className="text-xs text-gray-700">Phases complétées développables</span>
+                </>
+              )}
+            </div>
           </div>
           
           {/* Affichage des phases */}
@@ -770,12 +864,26 @@ const AdminRoadmap = ({ adminSecret }) => {
             .sort((a, b) => sectionData.phases[a].order - sectionData.phases[b].order)
             .map(phase => (
             <div key={phase} className="mb-8">
-              <div className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between`}>
+              <div 
+                className={`${monthStyle} ${sectionColors[sectionData.color].tab} flex justify-between cursor-pointer transition-all duration-300 hover:shadow-md`}
+                onClick={() => togglePhase(sectionData.id, phase)}
+              >
                 <span className="flex items-center">
+                  {collapsedPhases[`${sectionData.id}-${phase}`] ? 
+                    <ChevronRight className="mr-2 transition-transform duration-300" size={20} /> : 
+                    <ChevronDown className="mr-2 transition-transform duration-300" size={20} />
+                  }
                   <Calendar className="mr-2" size={20} /> 
-                  {sectionData.phases[phase].title}
+                  <span className="font-medium">{sectionData.phases[phase].title}</span>
                 </span>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
+                  {/* Indicateur de progression */}
+                  <div className="w-24 bg-gray-200 rounded-full h-3 hidden md:block">
+                    <div 
+                      className="bg-green-500 h-3 rounded-full transition-all duration-500 ease-in-out" 
+                      style={{ width: `${getPhaseCompletionPercentage(sectionData, phase)}%` }}
+                    ></div>
+                  </div>
                   <button 
                     onClick={() => startEdit('phase', sectionData.id, phase)}
                     className="p-1 text-white hover:bg-white hover:bg-opacity-20 rounded"
@@ -798,7 +906,10 @@ const AdminRoadmap = ({ adminSecret }) => {
               </div>
               
               {/* Affichage des semaines et tâches */}
-              {Object.keys(sectionData.phases[phase])
+              <div
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${collapsedPhases[`${sectionData.id}-${phase}`] ? 'max-h-0 opacity-0' : 'max-h-[5000px] opacity-100'}`}
+              >
+                {Object.keys(sectionData.phases[phase])
                 .filter(key => key !== 'title' && key !== 'order')
                 .sort((a, b) => sectionData.phases[phase][a].order - sectionData.phases[phase][b].order)
                 .map(week => (
@@ -965,6 +1076,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                   </ul>
                 </div>
               ))}
+              </div>
               
               {/* Le bouton 'Ajouter une semaine' a été supprimé car nous ajoutons automatiquement 4 semaines lors de la création d'une phase */}
             </div>
