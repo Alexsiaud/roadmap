@@ -25,6 +25,7 @@ const AdminRoadmap = ({ adminSecret }) => {
   const [destinationTarget, setDestinationTarget] = useState(null);
   const [sortByVotes, setSortByVotes] = useState(false);
   const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
+  const [editingTask, setEditingTask] = useState(null); // { sectionId, phase, week, taskId, text }
   
   // Obtenir la section active
   const sectionData = roadmapData.sections.find(s => s.id === activeSection);
@@ -307,8 +308,10 @@ const AdminRoadmap = ({ adminSecret }) => {
       
       setRoadmapData(updatedRoadmapData);
       
-      // Immédiatement éditer la nouvelle tâche
-      startEdit('task', sectionId, phase, week, newTask.id);
+      // Immédiatement mettre la nouvelle tâche en mode édition inline
+      setTimeout(() => {
+        startInlineEdit(sectionId, phase, week, newTask.id);
+      }, 50);
     } else {
       console.error('Impossible d\'ajouter une tâche: la structure n\'est pas valide', 
                    {sectionId, phase, week, section: !!section});
@@ -476,6 +479,63 @@ const AdminRoadmap = ({ adminSecret }) => {
     }, 300);
   };
   
+  // Fonction pour commencer l'édition inline d'une tâche
+  const startInlineEdit = (sectionId, phase, week, taskId) => {
+    const section = roadmapData.sections.find(s => s.id === sectionId);
+    if (section && section.phases[phase] && section.phases[phase][week]) {
+      const task = section.phases[phase][week].tasks.find(t => t.id === taskId);
+      if (task) {
+        setEditingTask({
+          sectionId,
+          phase,
+          week,
+          taskId,
+          text: task.text
+        });
+      }
+    }
+  };
+  
+  // Fonction pour mettre à jour le texte de la tâche en cours d'édition
+  const updateEditingTaskText = (text) => {
+    setEditingTask(prev => prev ? { ...prev, text } : null);
+  };
+  
+  // Fonction pour sauvegarder l'édition inline
+  const saveInlineEdit = () => {
+    if (!editingTask) return;
+    
+    const { sectionId, phase, week, taskId, text } = editingTask;
+    const updatedRoadmapData = {...roadmapData};
+    const section = updatedRoadmapData.sections.find(s => s.id === sectionId);
+    
+    if (section && section.phases[phase] && section.phases[phase][week]) {
+      const taskIndex = section.phases[phase][week].tasks.findIndex(t => t.id === taskId);
+      if (taskIndex !== -1) {
+        section.phases[phase][week].tasks[taskIndex].text = text;
+        setRoadmapData(updatedRoadmapData);
+      }
+    }
+    
+    setEditingTask(null);
+  };
+  
+  // Fonction pour annuler l'édition inline
+  const cancelInlineEdit = () => {
+    setEditingTask(null);
+  };
+  
+  // Gérer les touches clavier pendant l'édition inline
+  const handleInlineEditKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveInlineEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelInlineEdit();
+    }
+  };
+
   // Fonction pour générer le lien public
   const getPublicLink = () => {
     const baseUrl = window.location.origin;
@@ -746,9 +806,25 @@ const AdminRoadmap = ({ adminSecret }) => {
                             ) : renderIcon(task.icon, task.completed)}
                           </div>
                           
-                          <span className={`flex-grow ${task.completed ? 'text-green-700 font-medium' : 'text-gray-700'}`}>
-                            {task.text}
-                          </span>
+                          {editingTask && editingTask.taskId === task.id ? (
+                            <input
+                              type="text"
+                              value={editingTask.text}
+                              onChange={(e) => updateEditingTaskText(e.target.value)}
+                              onKeyDown={handleInlineEditKeyDown}
+                              onBlur={saveInlineEdit}
+                              autoFocus
+              className="flex-grow p-1 px-2 border-b-2 border-blue-500 bg-blue-50 rounded outline-none w-full text-blue-700 font-medium"
+                            />
+                          ) : (
+                            <span 
+                              className={`flex-grow ${task.completed ? 'text-green-700 font-medium' : 'text-gray-700'} cursor-text`}
+                              onDoubleClick={() => startInlineEdit(sectionData.id, phase, week, task.id)}
+                              title="Double-cliquez pour modifier"
+                            >
+                              {task.text}
+                            </span>
+                          )}
                           
                           {/* Badge de vote avec compteur */}
                           <div className="flex items-center bg-gray-50 rounded-full px-3 py-1 ml-2">
