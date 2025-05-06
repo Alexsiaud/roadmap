@@ -282,7 +282,15 @@ const AdminRoadmap = ({ adminSecret }) => {
         section.phases[phase][week].tasks = [];
       }
       
-      const newTask = createEmptyTask(sectionId, phase, week);
+      // Créer une nouvelle tâche avec un ID unique
+      const newTask = {
+        id: generateId('task'), 
+        text: 'Nouvelle tâche',
+        icon: 'Task',
+        completed: false,
+        votes: 0
+      };
+      
       console.log('Nouvelle tâche créée:', newTask);
       
       section.phases[phase][week].tasks.push(newTask);
@@ -346,12 +354,23 @@ const AdminRoadmap = ({ adminSecret }) => {
   
   // Gestion du drag and drop
   const handleDragStart = (sectionId, phase, week, task) => {
-    setDraggedItem({ sectionId, phase, week, task });
+    console.log('Début du drag:', {sectionId, phase, week, task});
+    // Ajouter les informations de position à l'objet task pour faciliter le déplacement
+    const taskWithPosition = {
+      ...task,
+      fromSection: sectionId,
+      fromPhase: phase,
+      fromWeek: week
+    };
+    setDraggedItem({ sectionId, phase, week, task: taskWithPosition });
   };
   
   const handleDragEnter = (sectionId, phase, week) => {
+    // Seulement changer la destination si un élément est en cours de déplacement
     if (!draggedItem) return;
     
+    // Indiquer visuellement la zone cible
+    console.log('Entrée dans la zone:', {sectionId, phase, week});
     setDestinationTarget({ sectionId, phase, week });
   };
   
@@ -365,41 +384,67 @@ const AdminRoadmap = ({ adminSecret }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Simuler un fin de glisser-déposer
-    if (draggedItem) {
-      setDestinationTarget({ sectionId, phase, week });
-      handleDragEnd();
+    // Vérifier si un élément est en cours de déplacement
+    if (!draggedItem) {
+      console.log('Aucun élément en cours de déplacement');
+      return;
     }
+    
+    console.log('Dépôt dans la zone:', {sectionId, phase, week});
+    console.log('Élément déplacé:', draggedItem);
+    
+    // Mettre à jour la destination et finaliser le déplacement
+    setDestinationTarget({ sectionId, phase, week });
+    
+    // Copie profonde pour éviter les problèmes de référence
+    const updatedRoadmapData = JSON.parse(JSON.stringify(roadmapData));
+    
+    const { sectionId: fromSectionId, phase: fromPhase, week: fromWeek, task } = draggedItem;
+    
+    // Si destination = origine, ne rien faire
+    if (fromSectionId === sectionId && fromPhase === phase && fromWeek === week) {
+      console.log('Même position, aucun changement nécessaire');
+      setDraggedItem(null);
+      setDestinationTarget(null);
+      return;
+    }
+    
+    try {
+      // Supprimer la tâche de son emplacement d'origine
+      const fromSection = updatedRoadmapData.sections.find(s => s.id === fromSectionId);
+      if (fromSection && fromSection.phases[fromPhase] && fromSection.phases[fromPhase][fromWeek]) {
+        fromSection.phases[fromPhase][fromWeek].tasks = fromSection.phases[fromPhase][fromWeek].tasks.filter(t => t.id !== task.id);
+      }
+      
+      // Ajouter la tâche à sa destination
+      const toSection = updatedRoadmapData.sections.find(s => s.id === sectionId);
+      if (toSection && toSection.phases[phase] && toSection.phases[phase][week]) {
+        // S'assurer que le tableau tasks existe
+        if (!toSection.phases[phase][week].tasks) {
+          toSection.phases[phase][week].tasks = [];
+        }
+        
+        // Copie de la tâche sans les informations de position
+        const { fromSection, fromPhase, fromWeek, ...taskWithoutPosition } = task;
+        toSection.phases[phase][week].tasks.push(taskWithoutPosition);
+        
+        console.log('Déplacement réussi');
+      }
+      
+      // Mettre à jour les données
+      setRoadmapData(updatedRoadmapData);
+    } catch (error) {
+      console.error('Erreur lors du déplacement:', error);
+    }
+    
+    // Réinitialiser l'état
+    setDraggedItem(null);
+    setDestinationTarget(null);
   };
   
   const handleDragEnd = () => {
-    if (!draggedItem || !destinationTarget) {
-      setDraggedItem(null);
-      setDestinationTarget(null);
-      return;
-    }
-    
-    const { sectionId: fromSectionId, phase: fromPhase, week: fromWeek, task } = draggedItem;
-    const { sectionId: toSectionId, phase: toPhase, week: toWeek } = destinationTarget;
-    
-    // Si destination = origine, ne rien faire
-    if (fromSectionId === toSectionId && fromPhase === toPhase && fromWeek === toWeek) {
-      setDraggedItem(null);
-      setDestinationTarget(null);
-      return;
-    }
-    
-    const updatedRoadmapData = {...roadmapData};
-    
-    // Supprimer la tâche de son emplacement d'origine
-    const fromSection = updatedRoadmapData.sections.find(s => s.id === fromSectionId);
-    fromSection.phases[fromPhase][fromWeek].tasks = fromSection.phases[fromPhase][fromWeek].tasks.filter(t => t.id !== task.id);
-    
-    // Ajouter la tâche à sa destination
-    const toSection = updatedRoadmapData.sections.find(s => s.id === toSectionId);
-    toSection.phases[toPhase][toWeek].tasks.push(task);
-    
-    setRoadmapData(updatedRoadmapData);
+    console.log('Fin du drag');
+    // Réinitialiser les états si le dépôt n'a pas fonctionné
     setDraggedItem(null);
     setDestinationTarget(null);
   };

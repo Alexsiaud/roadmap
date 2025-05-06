@@ -191,29 +191,33 @@ const PublicRoadmap = () => {
                       const hasVoted = userVotes[voteKey];
                       
                       return (
-                        <li key={task.id} className={taskStyle}>
-                          {/* Indicateur de statut sans case à cocher */}
-                          {task.completed && (
-                            <span className="text-green-500 flex-shrink-0">
-                              <CheckCircle size={16} className="mr-1" />
+                        <li key={task.id} className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow`}>
+                          <div className="flex items-center w-full p-3">
+                            {/* Indicateur de statut sans case à cocher */}
+                            <div className="flex-shrink-0 mr-3">
+                              {task.completed ? (
+                                <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-500 rounded-full">
+                                  <CheckCircle size={16} />
+                                </span>
+                              ) : renderIcon(task.icon, task.completed)}
+                            </div>
+                            
+                            <span className={`flex-grow ${task.completed ? 'text-green-700 font-medium' : 'text-gray-700'}`}>
+                              {task.text}
                             </span>
-                          )}
-                          {renderIcon(task.icon, task.completed)}
-                          <span className={task.completed ? taskCompletedStyle : taskTextStyle}>
-                            {task.text}
-                          </span>
-                          
-                          {/* Bouton de vote et compteur */}
-                          <div className="flex items-center ml-auto">
-                            <span className={voteCountStyle}>{task.votes || 0}</span>
-                            <button 
-                              className={hasVoted ? voteAlreadyStyle : voteButtonStyle}
-                              onClick={() => !hasVoted && handleVote(sectionData.id, phase, week, task.id)}
-                              title={hasVoted ? "Vous avez déjà voté" : "Voter pour cette tâche"}
-                              disabled={hasVoted}
-                            >
-                              <ThumbsUp size={16} />
-                            </button>
+                            
+                            {/* Bouton de vote et compteur */}
+                            <div className={`flex items-center ${hasVoted ? 'bg-blue-100' : 'bg-gray-50'} rounded-full px-3 py-1 ml-2`}>
+                              <span className="font-semibold text-gray-700 mr-1">{task.votes || 0}</span>
+                              <button 
+                                className={hasVoted ? 'text-blue-500 cursor-not-allowed' : 'text-gray-500 hover:text-blue-500'}
+                                onClick={() => !hasVoted && handleVote(sectionData.id, phase, week, task.id)}
+                                title={hasVoted ? "Vous avez déjà voté" : "Voter pour cette tâche"}
+                                disabled={hasVoted}
+                              >
+                                <ThumbsUp size={16} />
+                              </button>
+                            </div>
                           </div>
                         </li>
                       )
