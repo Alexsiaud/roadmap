@@ -774,20 +774,25 @@ const AdminRoadmap = ({ adminSecret }) => {
                       ? sortTasksByVotes(sectionData.phases[phase][week].tasks)
                       : sectionData.phases[phase][week].tasks
                     ).map((task, index) => (
-                      <li 
+                      <div 
                         key={task.id} 
-                        className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow group ${
+                        className={`group bg-white mb-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 ${
+                          draggedItem && draggedItem.task.id === task.id ? 'opacity-50' : ''
+                        } ${
                           destinationTarget && 
                           destinationTarget.sectionId === sectionData.id && 
                           destinationTarget.phase === phase && 
                           destinationTarget.week === week ? 
                             draggedItem && draggedItem.task.id === task.id ? 'bg-gray-200' : 'border-l-4 border-blue-500' : ''
-                        } cursor-grab`}
-                        draggable="true"
-                        onDragStart={() => handleDragStart(sectionData.id, phase, week, task)}
+                        } ${editingTask && editingTask.taskId === task.id ? '' : 'cursor-grab'}`}
+                        draggable={editingTask && editingTask.taskId === task.id ? "false" : "true"}
+                        onDragStart={() => {
+                          if (!(editingTask && editingTask.taskId === task.id)) {
+                            handleDragStart(sectionData.id, phase, week, task);
+                          }
+                        }}
                         onDragEnd={handleDragEnd}
-                        onDragOver={handleDragOver}
-                        title="Glisser pour déplacer cette tâche entre les semaines"
+                        title={editingTask && editingTask.taskId === task.id ? "" : "Glisser pour déplacer cette tâche entre les semaines"}
                       >
                         <div className="flex items-center w-full p-3">
                           {/* L'indicateur de déplacement a été supprimé, conservant uniquement le curseur grab */}
@@ -879,7 +884,7 @@ const AdminRoadmap = ({ adminSecret }) => {
                             </button>
                           </div>
                         </div>
-                      </li>
+                      </div>
                     ))}
                     {/* Bouton pour ajouter une nouvelle tâche directement dans la liste */}
                     <li 
