@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { RoadmapProvider, useRoadmap } from './components/RoadmapContext';
 import PublicRoadmap from './components/PublicRoadmap';
 
@@ -58,11 +58,11 @@ const AppRoutes = () => {
 // Composant principal de l'application
 const App = () => {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <RoadmapProvider>
         <AppRoutes />
       </RoadmapProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
