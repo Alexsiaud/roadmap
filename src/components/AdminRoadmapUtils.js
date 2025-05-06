@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, ThumbsUp } from 'lucide-react';
+import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart } from 'lucide-react';
 
 // Mapping des noms d'icônes vers les composants Lucide
 export const icons = {

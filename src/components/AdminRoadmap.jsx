@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Edit, Trash2, Plus, Save, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
 import { styles, sectionColors } from './AdminRoadmapStyles';
 import { renderIcon, calculateStats, generateId, sortTasksByVotes, createEmptyTask } from './AdminRoadmapUtils';
