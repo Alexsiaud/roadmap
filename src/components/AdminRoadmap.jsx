@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
+import { Calendar, CheckCircle, Code, Database, FileText, Settings, Users, BarChart, Edit, Trash2, Plus, ChevronUp, ChevronDown, ThumbsUp } from 'lucide-react';
 import { useRoadmap } from './RoadmapContext';
 import { sectionColors, styles } from './AdminRoadmapStyles';
 import { renderIcon, calculateStats, generateId, sortTasksByVotes, createEmptyTask } from './AdminRoadmapUtils';
@@ -24,6 +24,7 @@ const AdminRoadmap = ({ adminSecret }) => {
   const [draggedItem, setDraggedItem] = useState(null);
   const [destinationTarget, setDestinationTarget] = useState(null);
   const [sortByVotes, setSortByVotes] = useState(false);
+  const [voteMessage, setVoteMessage] = useState({ show: false, success: false, text: '' });
   
   // Obtenir la section active
   const sectionData = roadmapData.sections.find(s => s.id === activeSection);
@@ -525,6 +526,13 @@ const AdminRoadmap = ({ adminSecret }) => {
   
   return (
     <div className={containerStyle}>
+      {/* Notification de vote */}
+      {voteMessage.show && (
+        <div className={`fixed top-4 right-4 p-3 rounded shadow-lg ${voteMessage.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {voteMessage.text}
+        </div>
+      )}
+      
       <div className={adminHeaderStyle}>
         <h1 className="text-2xl font-bold">Administration de la Roadmap</h1>
         <div>
@@ -676,68 +684,82 @@ const AdminRoadmap = ({ adminSecret }) => {
                     ).map((task, index) => (
                       <li 
                         key={task.id} 
-                        className={`${taskStyle} ${
+                        className={`${taskStyle} ${task.completed ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'} transition-all duration-200 shadow-sm rounded-lg mb-2 hover:shadow group ${
                           destinationTarget && 
                           destinationTarget.sectionId === sectionData.id && 
                           destinationTarget.phase === phase && 
                           destinationTarget.week === week ? 
-                            draggedItem && draggedItem.task.id === task.id ? 'bg-gray-200' : 'pl-2 border-l-2 border-blue-500' : ''
+                            draggedItem && draggedItem.task.id === task.id ? 'bg-gray-200' : 'border-l-4 border-blue-500' : ''
                         }`}
                         draggable="true"
                         onDragStart={() => handleDragStart(sectionData.id, phase, week, task)}
                         onDragEnd={handleDragEnd}
                         onDragOver={handleDragOver}
                       >
-                        <input 
-                          type="checkbox" 
-                          checked={task.completed} 
-                          onChange={() => handleTaskToggle(sectionData.id, phase, week, task.id)} 
-                          className={checkboxStyle}
-                        />
-                        {renderIcon(task.icon, task.completed)}
-                        <span className={task.completed ? taskCompletedStyle : taskTextStyle}>
-                          {task.text}
-                        </span>
-                        
-                        {/* Affichage des votes */}
-                        {task.votes > 0 && (
-                          <div className="ml-auto flex items-center text-blue-600 bg-blue-100 px-2 py-0.5 rounded text-sm">
-                            <ThumbsUp size={14} className="mr-1" /> 
-                            {task.votes}
+                        <div className="flex items-center w-full p-3">
+                          <input 
+                            type="checkbox" 
+                            checked={task.completed} 
+                            onChange={() => handleTaskToggle(sectionData.id, phase, week, task.id)} 
+                            className={checkboxStyle}
+                          />
+                          <div className="flex-shrink-0 mr-3">
+                            {task.completed ? (
+                              <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-500 rounded-full">
+                                <CheckCircle size={16} />
+                              </span>
+                            ) : renderIcon(task.icon, task.completed)}
                           </div>
-                        )}
-                        
-                        <div className="flex space-x-1 ml-2">
-                          <button 
-                            className={styles.actionButtonStyle}
-                            onClick={() => moveTask(sectionData.id, phase, week, task.id, "up")}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp size={16} className={index === 0 ? "text-gray-300" : ""} />
-                          </button>
-                          <button 
-                            className={styles.actionButtonStyle}
-                            onClick={() => moveTask(sectionData.id, phase, week, task.id, "down")}
-                            disabled={index === (sortByVotes 
-                              ? sortTasksByVotes(sectionData.phases[phase][week].tasks)
-                              : sectionData.phases[phase][week].tasks).length - 1}
-                          >
-                            <ChevronDown size={16} className={index === (sortByVotes 
-                              ? sortTasksByVotes(sectionData.phases[phase][week].tasks)
-                              : sectionData.phases[phase][week].tasks).length - 1 ? "text-gray-300" : ""} />
-                          </button>
-                          <button 
-                            className={styles.actionButtonStyle}
-                            onClick={() => startEdit('task', sectionData.id, phase, week, task.id)}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className={styles.actionButtonStyle}
-                            onClick={() => deleteTask(sectionData.id, phase, week, task.id)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          
+                          <span className={`flex-grow ${task.completed ? 'text-green-700 font-medium' : 'text-gray-700'}`}>
+                            {task.text}
+                          </span>
+                          
+                          {/* Badge de vote avec compteur */}
+                          <div className="flex items-center bg-gray-50 rounded-full px-3 py-1 ml-2">
+                            <span className="font-semibold text-gray-700 mr-1">{task.votes || 0}</span>
+                            <span className="text-gray-500">
+                              <ThumbsUp size={16} />
+                            </span>
+                          </div>
+                          
+                          {/* Boutons d'administration */}
+                          <div className="ml-2 space-x-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => moveTask(sectionData.id, phase, week, task.id, "up")}
+                              className={actionButtonStyle}
+                              title="Déplacer vers le haut"
+                              disabled={index === 0}
+                            >
+                              <ChevronUp size={16} className={index === 0 ? "text-gray-300" : ""} />
+                            </button>
+                            <button
+                              onClick={() => moveTask(sectionData.id, phase, week, task.id, "down")}
+                              className={actionButtonStyle}
+                              title="Déplacer vers le bas"
+                              disabled={index === (sortByVotes 
+                                ? sortTasksByVotes(sectionData.phases[phase][week].tasks)
+                                : sectionData.phases[phase][week].tasks).length - 1}
+                            >
+                              <ChevronDown size={16} className={index === (sortByVotes 
+                                ? sortTasksByVotes(sectionData.phases[phase][week].tasks)
+                                : sectionData.phases[phase][week].tasks).length - 1 ? "text-gray-300" : ""} />
+                            </button>
+                            <button 
+                              onClick={() => startEdit('task', sectionData.id, phase, week, task.id)}
+                              className={actionButtonStyle}
+                              title="Modifier"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              onClick={() => deleteTask(sectionData.id, phase, week, task.id)}
+                              className={actionButtonStyle}
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
                       </li>
                     ))}
