@@ -163,11 +163,15 @@ const AdminRoadmap = ({ adminSecret }) => {
   
   // Fonctions pour ajouter/supprimer des éléments
   const addSection = () => {
+    // Déterminer le prochain ordre disponible
+    const maxOrder = Math.max(0, ...roadmapData.sections.map(s => s.order || 0));
+    
     const newSection = {
       id: generateId('section'),
       title: 'Nouvelle Section',
       active: false,
       color: 'blue',
+      order: maxOrder + 1, // Attribuer le prochain ordre disponible
       phases: {
         phase1: {
           title: 'Nouvelle Phase',
@@ -535,6 +539,43 @@ const AdminRoadmap = ({ adminSecret }) => {
       cancelInlineEdit();
     }
   };
+  
+  // Déplacer une section vers le haut ou vers le bas dans l'ordre
+  const moveSection = (sectionId, direction) => {
+    const orderedSections = [...roadmapData.sections].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const sectionIndex = orderedSections.findIndex(s => s.id === sectionId);
+    
+    if (sectionIndex === -1) return;
+    
+    // Ne pas déplacer si c'est déjà en haut ou en bas
+    if ((direction === 'up' && sectionIndex === 0) || 
+        (direction === 'down' && sectionIndex === orderedSections.length - 1)) {
+      return;
+    }
+    
+    const targetIndex = direction === 'up' ? sectionIndex - 1 : sectionIndex + 1;
+    
+    // Échanger les ordres des deux sections
+    const currentSection = orderedSections[sectionIndex];
+    const targetSection = orderedSections[targetIndex];
+    
+    const currentOrder = currentSection.order || 0;
+    const targetOrder = targetSection.order || 0;
+    
+    const updatedSections = roadmapData.sections.map(section => {
+      if (section.id === currentSection.id) {
+        return { ...section, order: targetOrder };
+      } else if (section.id === targetSection.id) {
+        return { ...section, order: currentOrder };
+      }
+      return section;
+    });
+    
+    setRoadmapData({
+      ...roadmapData,
+      sections: updatedSections
+    });
+  };
 
   // Fonction pour générer le lien public
   const getPublicLink = () => {
@@ -641,14 +682,41 @@ const AdminRoadmap = ({ adminSecret }) => {
       {/* Onglets de navigation */}
       <div className="flex justify-between items-center mb-4">
         <div className={tabsContainerStyle}>
-          {roadmapData.sections.map(section => (
-            <div
-              key={section.id}
-              className={`${tabStyle} ${section.id === activeSection ? activeTabStyle : inactiveTabStyle}`}
-              onClick={() => handleSectionChange(section.id)}
-            >
-              {section.title}
-            </div>
+          {[...roadmapData.sections]
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .map(section => (
+              <div
+                key={section.id}
+                className={`${tabStyle} ${section.id === activeSection ? activeTabStyle : inactiveTabStyle} flex items-center group relative`}
+                onClick={() => handleSectionChange(section.id)}
+              >
+                <div className="flex-grow">
+                  {section.title}
+                  {section.order ? <span className="ml-2 text-xs text-gray-500">{section.order}</span> : null}
+                </div>
+                <div className="ml-2 flex opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveSection(section.id, 'up');
+                    }}
+                    className="p-1 text-gray-500 hover:text-blue-500 hover:bg-blue-100 rounded"
+                    title="Déplacer vers le haut"
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveSection(section.id, 'down');
+                    }}
+                    className="p-1 text-gray-500 hover:text-blue-500 hover:bg-blue-100 rounded"
+                    title="Déplacer vers le bas"
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
+              </div>
           ))}
         </div>
         <button 

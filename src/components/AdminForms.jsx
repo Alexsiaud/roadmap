@@ -252,6 +252,15 @@ export const SectionEditForm = ({ data, onSave, onCancel }) => {
           className="w-full p-2 border rounded mb-4"
         />
         
+        <label className="block mb-2">Ordre</label>
+        <input
+          type="number"
+          name="order"
+          value={sectionData.order || 0}
+          onChange={handleChange}
+          className="w-full p-2 border rounded mb-4"
+        />
+        
         <label className="block mb-2">Couleur</label>
         <select
           name="color"
